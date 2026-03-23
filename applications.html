@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applications - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="applications" data-auth="student">
+  <div id="site-nav"></div>
+  <div class="app-layout">
+    <aside data-sidebar="student" data-active="applications"></aside>
+    <main class="main-content">
+      <p class="label">Track Progress</p>
+      <h2 style="margin-bottom:0.5rem;">My Applications</h2>
+      <p class="text-muted" style="margin-bottom:2rem;">4 applications · 1 approved · 1 under review</p>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Scholarship</th>
+              <th>Amount</th>
+              <th>Applied On</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>STEM Excellence Award</strong><br><span style="font-size:0.78rem;color:#7a7060;">National Science Foundation</span></td>
+              <td class="mono">&#8377;50,000</td>
+              <td class="mono" style="font-size:0.82rem;">20 Mar 2025</td>
+              <td><span class="status status-review mono" style="font-size:0.78rem;">Under Review</span></td>
+              <td><a class="btn btn-sm btn-outline" href="detail.html">View</a></td>
+            </tr>
+            <tr>
+              <td><strong>National Merit Scholarship</strong><br><span style="font-size:0.78rem;color:#7a7060;">Ministry of Education</span></td>
+              <td class="mono">&#8377;1,00,000</td>
+              <td class="mono" style="font-size:0.82rem;">14 Mar 2025</td>
+              <td><span class="status status-approved mono" style="font-size:0.78rem;">Approved</span></td>
+              <td><button class="btn btn-sm btn-teal" type="button">Download Letter</button></td>
+            </tr>
+            <tr>
+              <td><strong>Women in Tech Grant</strong><br><span style="font-size:0.78rem;color:#7a7060;">TechCorp Foundation</span></td>
+              <td class="mono">&#8377;30,000</td>
+              <td class="mono" style="font-size:0.82rem;">10 Mar 2025</td>
+              <td><span class="status status-applied mono" style="font-size:0.78rem;">Applied</span></td>
+              <td><a class="btn btn-sm btn-outline" href="detail.html">View</a></td>
+            </tr>
+            <tr>
+              <td><strong>Rural Talent Scholarship</strong><br><span style="font-size:0.78rem;color:#7a7060;">State Government</span></td>
+              <td class="mono">&#8377;20,000</td>
+              <td class="mono" style="font-size:0.82rem;">01 Feb 2025</td>
+              <td><span class="status status-rejected mono" style="font-size:0.78rem;">Rejected</span></td>
+              <td><button class="btn btn-sm btn-outline" type="button">Reapply</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+  <script src="assets/app.js"></script>
+</body>
+</html>

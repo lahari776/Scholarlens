@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScholarLens | Discover Scholarships, Programs, and Career Opportunities</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="landing">
+  <div id="site-nav"></div>
+
+  <main class="landing-shell">
+    <section class="hero hero-modern">
+      <div class="container">
+        <div class="hero-layout">
+          <div class="hero-copy fade-up">
+            <span class="eyebrow">AI-powered discovery for ambitious students</span>
+            <h1>Discover Your Perfect Scholarship</h1>
+            <p class="hero-subtext">
+              ScholarLens helps students find scholarships, internships, hackathons, government schemes, fellowships,
+              workshops, and global opportunities with intelligent recommendations and deadline-aware discovery.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-gradient btn-lg" href="signup.html">Get Started</a>
+              <a class="btn btn-soft btn-lg" href="#scholarships-section">Explore Now</a>
+            </div>
+            <div class="hero-proof">
+              <span><i class="fa-solid fa-bolt"></i> AI-powered recommendations</span>
+              <span><i class="fa-solid fa-clock"></i> Deadline-aware discovery</span>
+              <span><i class="fa-solid fa-globe"></i> Global opportunities</span>
+            </div>
+          </div>
+
+          <div class="hero-visual fade-up delay-1" aria-hidden="true">
+            <div class="hero-orb hero-orb-one"></div>
+            <div class="hero-orb hero-orb-two"></div>
+            <div class="hero-panel">
+              <div class="hero-panel-top">
+                <span class="hero-mini-badge">Top Match</span>
+                <span class="hero-mini-badge alt">98% AI Fit</span>
+              </div>
+              <div class="hero-panel-body">
+                <div class="hero-icon-wrap">
+                  <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div>
+                  <h3>Scholarship + Opportunity Hub</h3>
+                  <p>Search smarter across funding, programs, internships, competitions, and international pathways.</p>
+                </div>
+              </div>
+              <div class="hero-stat-grid">
+                <div class="hero-stat-card">
+                  <strong>1,200+</strong>
+                  <span>Scholarships</span>
+                </div>
+                <div class="hero-stat-card">
+                  <strong>320+</strong>
+                  <span>Programs</span>
+                </div>
+                <div class="hero-stat-card">
+                  <strong>24/7</strong>
+                  <span>AI Assistant</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tinted" id="scholarships-section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Featured funding</span>
+            <h2>Scholarships You Shouldn't Miss</h2>
+          </div>
+          <a class="section-link" href="scholarships.html">Browse all scholarships <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div class="subsection-block">
+          <div class="subsection-heading">
+            <h3>Latest Scholarships</h3>
+            <p>Freshly surfaced opportunities matched to what students are actively applying for right now.</p>
+          </div>
+          <div class="row g-4" id="latest-scholarships"></div>
+        </div>
+
+        <div class="subsection-block">
+          <div class="subsection-heading">
+            <h3>Deadline Approaching</h3>
+            <p>High-priority scholarships closing soon so you can move before the window slips away.</p>
+          </div>
+          <div class="row g-4" id="deadline-scholarships"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Career and growth</span>
+            <h2>Opportunities You Shouldn't Miss</h2>
+          </div>
+          <a class="section-link" href="#opportunity-categories">Explore categories <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div id="opportunity-categories" class="opportunity-groups">
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Hackathons</h3>
+              <p>Build, compete, and win with practical innovation challenges.</p>
+            </div>
+            <div class="scroll-row" id="hackathons-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Government Schemes</h3>
+              <p>Access public programs for funding, skilling, and career acceleration.</p>
+            </div>
+            <div class="scroll-row" id="govt-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Internships</h3>
+              <p>Discover roles that add real experience to your academic journey.</p>
+            </div>
+            <div class="scroll-row" id="internships-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Fellowships / Programs</h3>
+              <p>Structured learning, leadership, and research opportunities for long-term growth.</p>
+            </div>
+            <div class="scroll-row" id="fellowships-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Workshops / Bootcamps</h3>
+              <p>Short-format, skill-first experiences built to help you move quickly.</p>
+            </div>
+            <div class="scroll-row" id="workshops-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>International Opportunities</h3>
+              <p>Global scholarships, immersions, exchanges, and cross-border growth programs.</p>
+            </div>
+            <div class="scroll-row" id="international-row"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-tinted">
+      <div class="container">
+        <div class="section-heading compact">
+          <div>
+            <span class="eyebrow">Platform highlights</span>
+            <h2>Built to make discovery effortless</h2>
+          </div>
+        </div>
+        <div class="feature-grid-modern">
+          <article class="feature-card-modern">
+            <div class="feature-card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <h3>Smart Matching</h3>
+            <p>AI sorts through thousands of opportunities and highlights the ones that fit your academic and career profile.</p>
+          </article>
+          <article class="feature-card-modern">
+            <div class="feature-card-icon"><i class="fa-solid fa-bell"></i></div>
+            <h3>Smart Alerts</h3>
+            <p>Stay on top of deadlines, newly added listings, and fast-moving opportunities without constant manual searching.</p>
+          </article>
+          <article class="feature-card-modern">
+            <div class="feature-card-icon"><i class="fa-solid fa-robot"></i></div>
+            <h3>AI Chatbot</h3>
+            <p>Ask questions instantly about scholarships, eligibility, timelines, and where to focus next.</p>
+          </article>
+          <article class="feature-card-modern">
+            <div class="feature-card-icon"><i class="fa-solid fa-table-columns"></i></div>
+            <h3>Easy Dashboard</h3>
+            <p>Track applications, bookmarks, and recommendations from one student-friendly workspace.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="cta-panel">
+          <div>
+            <span class="eyebrow">Take the next step</span>
+            <h2>Ready to Change Your Future?</h2>
+            <p>Create your ScholarLens account to unlock AI-powered recommendations and curated opportunities that match your goals.</p>
+          </div>
+          <a class="btn btn-gradient btn-lg" href="signup.html">Create Account</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="footer-brand"><i class="fa-solid fa-graduation-cap"></i> ScholarLens</div>
+        <p class="footer-copy">
+          ScholarLens helps students discover scholarships, learning programs, internships, and global opportunities through a clean, AI-powered discovery experience.
+        </p>
+      </div>
+      <div>
+        <h3>Quick Links</h3>
+        <a href="index.html">Home</a>
+        <a href="scholarships.html">Scholarships</a>
+        <a href="dashboard.html">Programs</a>
+        <a href="login.html">Login</a>
+      </div>
+      <div>
+        <h3>Follow</h3>
+        <div class="social-row">
+          <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="chat-fab" id="chat-toggle" type="button" aria-label="Open scholarship assistant">
+    <i class="fa-solid fa-comments"></i>
+  </button>
+
+  <div class="chat-widget" id="chat-widget" aria-hidden="true">
+    <div class="chat-header">
+      <div>
+        <strong>ScholarLens Assistant</strong>
+        <p>Hi! I'm your scholarship assistant</p>
+      </div>
+      <button type="button" id="chat-close" aria-label="Close chat">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="chat-body" id="chat-messages">
+      <div class="chat-message bot">Hi! I'm your scholarship assistant</div>
+    </div>
+    <form class="chat-input-row" id="chat-form">
+      <input type="text" id="chat-input" placeholder="Ask about scholarships or programs">
+      <button class="btn btn-gradient btn-sm" type="submit">Send</button>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/opportunities-home.js"></script>
+</body>
+</html>

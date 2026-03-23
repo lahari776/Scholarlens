@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="dashboard" data-auth="student">
+  <div id="site-nav"></div>
+  <div class="app-layout">
+    <aside data-sidebar="student" data-active="dashboard"></aside>
+    <main class="main-content">
+      <div class="alert alert-info">
+        <strong>Complete your profile</strong> to unlock AI-powered scholarship recommendations.
+        <a href="profile.html" class="btn btn-sm" style="margin-left:1rem; background:rgba(52,152,219,0.2); color:#1a5276; border-color:rgba(52,152,219,0.3);">Go to Profile</a>
+      </div>
+      <p class="label">Overview</p>
+      <h2 style="margin-bottom:0.5rem;">Welcome back, Arjun</h2>
+      <p class="text-muted" style="margin-bottom:2rem;">Here's what's happening with your scholarships.</p>
+      <div class="grid-4" style="margin-bottom:2.5rem;">
+        <div class="stat-card"><div class="stat-num">1,248</div><div class="stat-label">Total Scholarships</div></div>
+        <div class="stat-card"><div class="stat-num">4</div><div class="stat-label">Applied</div></div>
+        <div class="stat-card"><div class="stat-num">7</div><div class="stat-label">Saved</div></div>
+        <div class="stat-card"><div class="stat-num">92%</div><div class="stat-label">Top Match Score</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-bottom:1.25rem;">Quick Actions</h3>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <a class="btn btn-gold" href="recommendations.html">Get AI Recommendations</a>
+            <a class="btn btn-teal" href="scholarships.html">Browse Scholarships</a>
+            <a class="btn btn-dark" href="profile.html">Complete Profile</a>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:1.25rem;">Recent Applications</h3>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:#faf7f1; border-radius:4px;">
+              <div><p style="font-size:0.88rem; font-weight:600;">STEM Excellence Award</p><p style="font-size:0.78rem; color:#7a7060;">Applied 3 days ago</p></div>
+              <span class="status status-review mono" style="font-size:0.75rem;">Under Review</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:#faf7f1; border-radius:4px;">
+              <div><p style="font-size:0.88rem; font-weight:600;">National Merit Scholarship</p><p style="font-size:0.78rem; color:#7a7060;">Applied 1 week ago</p></div>
+              <span class="status status-approved mono" style="font-size:0.75rem;">Approved</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:#faf7f1; border-radius:4px;">
+              <div><p style="font-size:0.88rem; font-weight:600;">Women in Tech Grant</p><p style="font-size:0.78rem; color:#7a7060;">Applied 2 weeks ago</p></div>
+              <span class="status status-applied mono" style="font-size:0.75rem;">Applied</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/app.js"></script>
+</body>
+</html>

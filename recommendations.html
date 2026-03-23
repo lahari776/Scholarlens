@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Recommendations - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body data-page="recommendations" data-auth="student">
+  <div id="site-nav"></div>
+  <div class="app-layout">
+    <aside data-sidebar="student" data-active="recommendations"></aside>
+    <main class="main-content">
+      <p class="label">Powered by AI</p>
+      <h2 style="margin-bottom:0.5rem;">AI Scholarship Recommendations</h2>
+      <p class="text-muted" style="margin-bottom:1.5rem;">Matched based on your profile: B.Tech CSE · CGPA 8.7 · Income &#8377;1-5 LPA · Tamil Nadu</p>
+      <button class="btn btn-gold btn-lg" type="button" style="margin-bottom:2rem;" onclick="runAI(this)">Refresh Recommendations</button>
+      <div id="ai-results" style="display:flex; flex-direction:column; gap:1rem;"></div>
+    </main>
+  </div>
+  <script src="assets/app.js"></script>
+</body>
+</html>
