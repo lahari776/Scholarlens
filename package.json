@@ -1,0 +1,12 @@
+{
+  "name": "scholarlens",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm --prefix backend start\" \"npx live-server frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "live-server": "^1.2.2"
+  }
+}

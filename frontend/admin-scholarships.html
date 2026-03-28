@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Scholarships - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/theme.css">
+</head>
+<body data-page="admin" data-auth="admin">
+  <div id="site-nav"></div>
+  <div class="app-layout">
+    <aside data-sidebar="admin" data-active="admin-scholarships"></aside>
+    <main class="main-content">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem;">
+        <div><p class="label">Admin</p><h2>Manage Scholarships</h2></div>
+        <button class="btn btn-gold" type="button" onclick="toggleAdminForm()">Add Scholarship</button>
+      </div>
+      <div id="admin-add-form" class="card" style="display:none; margin-bottom:1.5rem; border-left:4px solid var(--gold);">
+        <h3 style="margin-bottom:1.25rem;">Add New Scholarship</h3>
+        <div class="form-group"><label class="form-label">Title</label><input type="text" class="form-input" placeholder="Scholarship name"></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" placeholder="Describe the scholarship..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Amount (&#8377;)</label><input type="number" class="form-input" placeholder="50000"></div>
+          <div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-input"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Min GPA</label><input type="number" class="form-input" placeholder="7.5" step="0.1"></div>
+          <div class="form-group"><label class="form-label">Max Income (LPA)</label><input type="number" class="form-input" placeholder="8"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Eligible Degree</label><select class="form-select"><option>All</option><option>B.Tech</option><option>B.Sc</option><option>MBA</option></select></div>
+        <div style="display:flex; gap:1rem; justify-content:flex-end;">
+          <button class="btn btn-outline" type="button" onclick="toggleAdminForm()">Cancel</button>
+          <button class="btn btn-gold" type="button">Save Scholarship</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0; overflow:hidden;">
+        <table>
+          <thead><tr><th>Title</th><th>Amount</th><th>Deadline</th><th>Apps</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><strong>STEM Excellence Award</strong></td><td class="mono">&#8377;50,000</td><td class="mono" style="font-size:0.82rem;">15 Mar 2026</td><td>28</td><td><div style="display:flex; gap:0.5rem;"><button class="btn btn-sm btn-outline" type="button">Edit</button><button class="btn btn-sm" type="button" style="background:rgba(192,57,43,0.1); color:var(--red); border-color:rgba(192,57,43,0.25);">Delete</button></div></td></tr>
+            <tr><td><strong>National Merit Scholarship</strong></td><td class="mono">&#8377;1,00,000</td><td class="mono" style="font-size:0.82rem;">30 Apr 2026</td><td>142</td><td><div style="display:flex; gap:0.5rem;"><button class="btn btn-sm btn-outline" type="button">Edit</button><button class="btn btn-sm" type="button" style="background:rgba(192,57,43,0.1); color:var(--red); border-color:rgba(192,57,43,0.25);">Delete</button></div></td></tr>
+            <tr><td><strong>AI Innovation Grant 2025</strong></td><td class="mono">&#8377;75,000</td><td class="mono" style="font-size:0.82rem;">01 Jun 2026</td><td>11</td><td><div style="display:flex; gap:0.5rem;"><button class="btn btn-sm btn-outline" type="button">Edit</button><button class="btn btn-sm" type="button" style="background:rgba(192,57,43,0.1); color:var(--red); border-color:rgba(192,57,43,0.25);">Delete</button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/theme.css">
+</head>
+<body data-page="notifications" data-auth="student">
+  <div id="site-nav"></div>
+  <div class="app-layout">
+    <aside data-sidebar="student" data-active="notifications"></aside>
+    <main class="main-content">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem;">
+        <div>
+          <p class="label">Updates</p>
+          <h2>Notifications</h2>
+        </div>
+        <button class="btn btn-outline btn-sm" type="button">Mark All Read</button>
+      </div>
+      <div id="notifications-list" class="card" style="padding:0; overflow:hidden;">
+        <div class="notif-item unread">
+          <div class="notif-dot"></div>
+          <div>
+            <p style="font-size:0.9rem; font-weight:600;">Application Approved</p>
+            <p style="font-size:0.82rem; color:#7a7060; margin-top:0.2rem;">Your application for <strong>National Merit Scholarship</strong> has been approved. Congratulations!</p>
+            <p class="mono" style="font-size:0.68rem; color:#aaa; margin-top:0.4rem;">2 hours ago</p>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-dot"></div>
+          <div>
+            <p style="font-size:0.9rem; font-weight:600;">Deadline Alert</p>
+            <p style="font-size:0.82rem; color:#7a7060; margin-top:0.2rem;"><strong>STEM Excellence Award</strong> deadline is in 7 days. Don't miss it.</p>
+            <p class="mono" style="font-size:0.68rem; color:#aaa; margin-top:0.4rem;">1 day ago</p>
+          </div>
+        </div>
+        <div class="notif-item unread">
+          <div class="notif-dot"></div>
+          <div>
+            <p style="font-size:0.9rem; font-weight:600;">New Match Found</p>
+            <p style="font-size:0.82rem; color:#7a7060; margin-top:0.2rem;">A new scholarship <strong>AI Innovation Grant 2025</strong> matches your profile at 88%.</p>
+            <p class="mono" style="font-size:0.68rem; color:#aaa; margin-top:0.4rem;">3 days ago</p>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot read"></div>
+          <div>
+            <p style="font-size:0.9rem; font-weight:500; color:#7a7060;">Application Received</p>
+            <p style="font-size:0.82rem; color:#aaa; margin-top:0.2rem;">We received your application for <strong>STEM Excellence Award</strong>.</p>
+            <p class="mono" style="font-size:0.68rem; color:#ccc; margin-top:0.4rem;">5 days ago</p>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot read"></div>
+          <div>
+            <p style="font-size:0.9rem; font-weight:500; color:#7a7060;">Profile Updated</p>
+            <p style="font-size:0.82rem; color:#aaa; margin-top:0.2rem;">Your profile changes have been saved. New AI matches are available.</p>
+            <p class="mono" style="font-size:0.68rem; color:#ccc; margin-top:0.4rem;">1 week ago</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/theme.css">
+</head>
+<body data-page="dashboard" data-auth="student">
+  <div id="site-nav"></div>
+  <div class="app-layout">
+    <aside data-sidebar="student" data-active="dashboard"></aside>
+    <main class="main-content">
+      <div id="dashboard-notification-summary" class="alert alert-info">
+        <strong>Complete your profile</strong> to unlock AI-powered scholarship recommendations.
+        <a href="profile.html" class="btn btn-sm" style="margin-left:1rem; background:rgba(52,152,219,0.2); color:#1a5276; border-color:rgba(52,152,219,0.3);">Go to Profile</a>
+      </div>
+
+      <p class="label">Overview</p>
+      <h2 id="dashboard-welcome" style="margin-bottom:0.5rem;">Welcome back, Scholar</h2>
+      <p id="dashboard-summary" class="text-muted" style="margin-bottom:2rem;">Here's what's happening with your scholarships.</p>
+
+      <div class="grid-4" style="margin-bottom:2.5rem;">
+        <div class="stat-card"><div id="dashboard-total-scholarships" class="stat-num">0</div><div class="stat-label">Total Scholarships</div></div>
+        <div class="stat-card"><div id="dashboard-applied-count" class="stat-num">0</div><div class="stat-label">Applied</div></div>
+        <div class="stat-card"><div id="dashboard-notification-count" class="stat-num">0</div><div class="stat-label">Notifications</div></div>
+        <div class="stat-card"><div id="dashboard-top-match" class="stat-num">0%</div><div class="stat-label">Top Match Score</div></div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:2.5rem;">
+        <div class="card">
+          <h3 style="margin-bottom:1.25rem;">Quick Actions</h3>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <a class="btn btn-gold" href="recommendations.html">Get AI Recommendations</a>
+            <a class="btn btn-teal" href="scholarships.html">Browse Scholarships</a>
+            <a class="btn btn-dark" href="profile.html">Complete Profile</a>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:1.25rem;">Recent Applications</h3>
+          <div id="dashboard-applications" style="display:flex; flex-direction:column; gap:0.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:#faf7f1; border-radius:4px;">
+              <div><p style="font-size:0.88rem; font-weight:600;">Loading applications...</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="section section-tinted" id="scholarships-section" style="padding:2rem 0;">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Featured funding</span>
+            <h2>Scholarships You Shouldn't Miss</h2>
+          </div>
+          <a class="section-link" href="scholarships.html">Browse all scholarships <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div class="subsection-block">
+          <div class="subsection-heading">
+            <h3>Latest Scholarships</h3>
+            <p>Freshly surfaced opportunities matched to what students are actively applying for right now.</p>
+          </div>
+          <div class="row g-4" id="latest-scholarships"></div>
+        </div>
+
+        <div class="subsection-block">
+          <div class="subsection-heading">
+            <h3>Deadline Approaching</h3>
+            <p>High-priority scholarships closing soon so you can move before the window slips away.</p>
+          </div>
+          <div class="row g-4" id="deadline-scholarships"></div>
+        </div>
+      </section>
+
+      <section class="section" style="padding:2rem 0 0;">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Career and growth</span>
+            <h2>Opportunities You Shouldn't Miss</h2>
+          </div>
+          <a class="section-link" href="#opportunity-categories">Explore categories <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div id="opportunity-categories" class="opportunity-groups">
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Hackathons</h3>
+              <p>Build, compete, and win with practical innovation challenges.</p>
+            </div>
+            <div class="scroll-row" id="hackathons-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Government Schemes</h3>
+              <p>Access public programs for funding, skilling, and career acceleration.</p>
+            </div>
+            <div class="scroll-row" id="govt-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Internships</h3>
+              <p>Discover roles that add real experience to your academic journey.</p>
+            </div>
+            <div class="scroll-row" id="internships-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Fellowships / Programs</h3>
+              <p>Structured learning, leadership, and research opportunities for long-term growth.</p>
+            </div>
+            <div class="scroll-row" id="fellowships-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>Workshops / Bootcamps</h3>
+              <p>Short-format, skill-first experiences built to help you move quickly.</p>
+            </div>
+            <div class="scroll-row" id="workshops-row"></div>
+          </div>
+
+          <div class="opportunity-category">
+            <div class="subsection-heading">
+              <h3>International Opportunities</h3>
+              <p>Global scholarships, immersions, exchanges, and cross-border growth programs.</p>
+            </div>
+            <div class="scroll-row" id="international-row"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/app.js"></script>
+  <script src="assets/opportunities-home.js"></script>
+</body>
+</html>

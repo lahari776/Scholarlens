@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/theme.css">
+</head>
+<body data-page="apply" data-auth="student">
+  <div id="site-nav"></div>
+  <div class="container section-sm" style="max-width:700px;">
+    <a href="detail.html" class="btn btn-outline btn-sm" style="margin-bottom:1.5rem;">Back to Scholarship</a>
+    <p class="label">Application Form</p>
+    <h2 style="margin-bottom:1.5rem;">Apply for STEM Excellence Scholarship</h2>
+    <div class="card">
+      <div class="alert alert-success" style="margin-bottom:1.5rem;">Your profile has been pre-filled. Please review before submitting.</div>
+      <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input" value="Arjun Sharma"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" value="arjun@example.com"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input type="text" class="form-input" value="+91 98765 43210"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Institution Name</label><input type="text" class="form-input" value="IIT Madras"></div>
+      <div class="form-group">
+        <label class="form-label">Statement of Purpose</label>
+        <textarea id="application-statement" class="form-textarea" style="min-height:120px;">I am passionate about leveraging AI/ML to solve real-world problems. This scholarship will help me pursue research opportunities.</textarea>
+      </div>
+      <hr class="fancy">
+      <h3 style="margin-bottom:1rem;">Upload Documents</h3>
+      <div id="upload-zone" class="upload-zone" onclick="document.getElementById('file-input').click()">
+        <p style="font-size:1.5rem;">&#128206;</p>
+        <p style="font-weight:600; margin-top:0.5rem;">Click to upload or drag and drop</p>
+        <p class="text-muted" style="font-size:0.82rem; margin-top:0.25rem;">PDF, JPG, PNG - Max 5MB each</p>
+        <input id="file-input" type="file" multiple style="display:none" onchange="handleFiles(this)">
+      </div>
+      <div id="file-list" style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.5rem;"></div>
+      <hr class="fancy">
+      <div style="display:flex; justify-content:flex-end; gap:1rem;">
+        <a class="btn btn-outline" href="detail.html">Cancel</a>
+        <button class="btn btn-gold btn-lg" type="button" onclick="submitApp(this)">Submit Application</button>
+      </div>
+    </div>
+  </div>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

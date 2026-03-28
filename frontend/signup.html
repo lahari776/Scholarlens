@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/theme.css">
+</head>
+<body data-page="signup">
+  <div id="site-nav"></div>
+  <div style="min-height:calc(100vh - 62px); display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, var(--ink) 0%, #1a1a1a 100%); padding:2rem;">
+    <div style="width:100%; max-width:480px;">
+      <div style="text-align:center; margin-bottom:2rem;">
+        <p class="label" style="margin-bottom:0.5rem;">Create Account</p>
+        <h2 style="color:var(--white);">Join ScholarLens</h2>
+      </div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input id="signup-first-name" type="text" class="form-input" placeholder="Arjun">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input id="signup-last-name" type="text" class="form-input" placeholder="Sharma">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input id="signup-email" type="email" class="form-input" placeholder="arjun@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input id="signup-password" type="password" class="form-input" placeholder="Create a password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">I am a</label>
+          <div style="display:flex; gap:1rem;">
+            <label id="role-student" style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; padding:0.65rem 1rem; border:1.5px solid var(--gold); border-radius:3px; flex:1;">
+              <input type="radio" name="role" value="student" checked onclick="selectRole('student')" style="accent-color:var(--gold)"> <span>Student</span>
+            </label>
+            <label id="role-admin" style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; padding:0.65rem 1rem; border:1.5px solid #ccc2af; border-radius:3px; flex:1;">
+              <input type="radio" name="role" value="admin" onclick="selectRole('admin')" style="accent-color:var(--gold)"> <span>Admin</span>
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-gold" type="button" style="width:100%;" onclick="handleSignup()">Create Account</button>
+        <hr class="fancy">
+        <p style="text-align:center; font-size:0.85rem;">
+          Already have an account?
+          <a href="login.html" style="color:var(--teal); font-family:'DM Mono',monospace; font-size:0.82rem;">Login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
