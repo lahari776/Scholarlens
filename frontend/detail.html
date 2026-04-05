@@ -10,61 +10,52 @@
   <link rel="stylesheet" href="assets/styles.css">
   <link rel="stylesheet" href="assets/theme.css">
 </head>
-<body data-page="detail">
+<body data-page="detail" data-auth="student">
   <div id="site-nav"></div>
   <div class="container section-sm">
     <a href="scholarships.html" class="btn btn-outline btn-sm" style="margin-bottom:1.5rem;">Back to Browse</a>
     <div class="two-column-page" style="display:grid; grid-template-columns:2fr 1fr; gap:2rem;">
       <div>
         <div class="card">
-          <span class="tag">Engineering</span>
-          <h2 style="margin:0.75rem 0 0.5rem;">STEM Excellence Scholarship 2025</h2>
-          <p class="text-muted" style="margin-bottom:1.5rem;">Offered by · National Science Foundation of India</p>
+          <span id="detail-type-tag" class="tag" hidden></span>
+          <h2 id="detail-title" style="margin:0.75rem 0 0.5rem;"></h2>
+          <p id="detail-provider" class="text-muted" style="margin-bottom:1.5rem;"></p>
           <hr class="fancy">
-          <h3 style="margin-bottom:0.75rem;">About This Scholarship</h3>
-          <p style="line-height:1.75; color:#4a4035;">The STEM Excellence Scholarship is awarded annually to outstanding engineering students who demonstrate academic brilliance and a passion for innovation. It covers tuition, living expenses, and mentorship access.</p>
+          <h3 style="margin-bottom:0.75rem;">About This Opportunity</h3>
+          <p id="detail-description" style="line-height:1.75; color:#4a4035;"></p>
           <hr class="fancy">
-          <h3 style="margin-bottom:0.75rem;">Eligibility Criteria</h3>
-          <ul style="padding-left:1.25rem; line-height:2; color:#4a4035;">
-            <li>Enrolled in B.Tech / B.E. (any branch)</li>
-            <li>Minimum CGPA of 8.0</li>
-            <li>Family income below &#8377;8 LPA</li>
-            <li>Indian citizen</li>
-            <li>No other active scholarship</li>
-          </ul>
+          <h3 style="margin-bottom:0.75rem;">Key Details</h3>
+          <ul id="detail-key-list" style="padding-left:1.25rem; line-height:2; color:#4a4035;"></ul>
           <hr class="fancy">
-          <h3 style="margin-bottom:0.75rem;">Documents Required</h3>
-          <ul style="padding-left:1.25rem; line-height:2; color:#4a4035;">
-            <li>Income certificate</li>
-            <li>Latest marksheet / transcript</li>
-            <li>Aadhaar card</li>
-            <li>Letter of recommendation (optional)</li>
-          </ul>
+          <h3 id="detail-secondary-heading" style="margin-bottom:0.75rem;">Eligibility Criteria</h3>
+          <ul id="detail-secondary-list" style="padding-left:1.25rem; line-height:2; color:#4a4035;"></ul>
         </div>
       </div>
       <div style="display:flex; flex-direction:column; gap:1.25rem;">
         <div class="stat-card">
-          <div class="stat-label">Award Amount</div>
-          <div class="stat-num" style="margin-top:0.5rem;">&#8377;50,000</div>
-          <div class="stat-label" style="margin-top:0.5rem;">Per Academic Year</div>
+          <div id="detail-benefit-label" class="stat-label">Award Amount</div>
+          <div id="detail-benefit-value" class="stat-num" style="margin-top:0.5rem;"></div>
+          <div id="detail-benefit-subtitle" class="stat-label" style="margin-top:0.5rem;"></div>
         </div>
         <div class="card">
           <p class="label">Deadline</p>
-          <p style="font-size:1.1rem; font-weight:600; margin-top:0.3rem;">15 March 2026</p>
-          <div class="alert alert-warning" style="margin-top:0.75rem; padding:0.6rem 0.75rem;">7 days remaining</div>
+          <p id="detail-deadline-value" style="font-size:1.1rem; font-weight:600; margin-top:0.3rem;"></p>
+          <div id="detail-deadline-alert" class="alert alert-warning" style="margin-top:0.75rem; padding:0.6rem 0.75rem;">Loading details...</div>
         </div>
         <div class="card">
-          <p class="label">Your Match</p>
+          <p id="detail-side-meta-label" class="label">Your Match</p>
           <div style="margin-top:0.75rem;">
-            <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
-            <p style="font-family:'DM Mono',monospace; font-size:0.8rem; margin-top:0.3rem; color:var(--teal);">92% match</p>
+            <div id="detail-side-meta-progress" class="progress-bar"><div id="detail-side-meta-fill" class="progress-fill" style="width:0%"></div></div>
+            <p id="detail-side-meta-text" style="font-family:'DM Mono',monospace; font-size:0.8rem; margin-top:0.3rem; color:var(--teal);">Loading status...</p>
           </div>
         </div>
-        <a class="btn btn-gold btn-lg" href="apply.html" style="width:100%;">Apply Now</a>
-        <button class="btn btn-outline" type="button" style="width:100%;">Save Scholarship</button>
+        <a id="detail-external-link" class="btn btn-gold btn-lg" href="#" target="_blank" rel="noopener noreferrer" style="width:100%;" aria-disabled="true">Apply Now</a>
+        <button id="register-button" class="btn btn-outline" type="button" style="width:100%;">Mark as Registered</button>
+        <button id="detail-save-button" class="btn btn-outline" type="button" style="width:100%;">Save Scholarship</button>
       </div>
     </div>
   </div>
+  <script src="assets/js/api.js"></script>
   <script src="assets/js/auth.js"></script>
   <script src="assets/app.js"></script>
 </body>

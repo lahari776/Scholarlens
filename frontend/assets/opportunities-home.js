@@ -160,6 +160,9 @@ function createOpportunityCard(opportunity) {
 }
 
 function renderHomeOpportunityRows() {
+  if (document.body?.dataset?.page === "dashboard") {
+    return;
+  }
   Object.entries(homeOpportunities).forEach(([rowId, items]) => {
     const row = document.getElementById(rowId);
     if (!row) {

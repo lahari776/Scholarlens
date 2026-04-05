@@ -1283,6 +1283,7 @@ function createBrowseOpportunityCard(item, session, matchScore = null) {
       <p style="font-size:0.84rem; color:#4a4035; margin-top:0.85rem;">${escapeHtml(item.description)}</p>
       <div class="sc-actions">
         <a class="btn btn-gold btn-sm" href="${detailHref}" style="flex:1;">Apply Now</a>
+        <a class="btn btn-outline btn-sm" href="${detailHref}">Details</a>
       </div>
     </div>
   `;
@@ -1535,62 +1536,55 @@ function parseDashboardDate(value) {
   }
 
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+    return value;
+  }
+
+  const directDate = new Date(value);
+  if (!Number.isNaN(directDate.getTime())) {
+    return directDate;
   }
 
   const normalizedValue = String(value).trim();
-  const isoMatch = normalizedValue.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoMatch) {
-    const [, yearText, monthText, dayText] = isoMatch;
-    const isoDate = new Date(Number(yearText), Number(monthText) - 1, Number(dayText));
-    return Number.isNaN(isoDate.getTime()) ? null : isoDate;
-  }
-
   const match = normalizedValue.match(/^(\d{1,2})[\s\/-]([A-Za-z]{3,9})[\s\/-](\d{4})$/);
-  if (match) {
-    const [, dayText, monthText, yearText] = match;
-    const monthLookup = {
-      jan: 0,
-      january: 0,
-      feb: 1,
-      february: 1,
-      mar: 2,
-      march: 2,
-      apr: 3,
-      april: 3,
-      may: 4,
-      jun: 5,
-      june: 5,
-      jul: 6,
-      july: 6,
-      aug: 7,
-      august: 7,
-      sep: 8,
-      sept: 8,
-      september: 8,
-      oct: 9,
-      october: 9,
-      nov: 10,
-      november: 10,
-      dec: 11,
-      december: 11
-    };
-    const monthIndex = monthLookup[monthText.toLowerCase()];
-
-    if (typeof monthIndex !== "number") {
-      return null;
-    }
-
-    const parsedDate = new Date(Number(yearText), monthIndex, Number(dayText));
-    return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
-  }
-
-  const directDate = new Date(normalizedValue);
-  if (Number.isNaN(directDate.getTime())) {
+  if (!match) {
     return null;
   }
 
-  return new Date(directDate.getFullYear(), directDate.getMonth(), directDate.getDate());
+  const [, dayText, monthText, yearText] = match;
+  const monthLookup = {
+    jan: 0,
+    january: 0,
+    feb: 1,
+    february: 1,
+    mar: 2,
+    march: 2,
+    apr: 3,
+    april: 3,
+    may: 4,
+    jun: 5,
+    june: 5,
+    jul: 6,
+    july: 6,
+    aug: 7,
+    august: 7,
+    sep: 8,
+    sept: 8,
+    september: 8,
+    oct: 9,
+    october: 9,
+    nov: 10,
+    november: 10,
+    dec: 11,
+    december: 11
+  };
+  const monthIndex = monthLookup[monthText.toLowerCase()];
+
+  if (typeof monthIndex !== 'number') {
+    return null;
+  }
+
+  const parsedDate = new Date(Number(yearText), monthIndex, Number(dayText));
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 }
 
 function getDashboardTimestamp(value) {
@@ -1624,17 +1618,11 @@ function normalizeDashboardScholarship(item) {
     return null;
   }
 
-  const deadlineDate = parseDashboardDate(item.deadline);
-  if (!deadlineDate) {
-    return null;
-  }
-
   return {
     id: item.id,
     title: item.title || "Scholarship Opportunity",
     description: item.description || "Explore this opportunity to learn more about the eligibility and funding details.",
     deadline: item.deadline,
-    deadlineDate,
     region: item.region || "Open region",
     funding: item.fundingAmount || "Funding available",
     provider: item.provider || "ScholarLens Partner",
@@ -1705,19 +1693,15 @@ function sortByNewest(items) {
 
 function sortByUpcomingDeadline(items) {
   return [...items].sort((left, right) => {
-    const leftTime = left.deadlineDate?.getTime() ?? getDashboardTimestamp(left.deadline);
-    const rightTime = right.deadlineDate?.getTime() ?? getDashboardTimestamp(right.deadline);
+    const leftTime = getDashboardTimestamp(left.deadline);
+    const rightTime = getDashboardTimestamp(right.deadline);
     return leftTime - rightTime;
   });
 }
 
 function isFutureDeadline(item) {
-  const deadline = item.deadlineDate || parseDashboardDate(item.deadline);
+  const deadline = parseDashboardDate(item.deadline);
   return Boolean(deadline) && deadline.getTime() >= getStartOfToday().getTime();
-}
-
-function filterActiveDashboardItems(items) {
-  return items.filter(isFutureDeadline);
 }
 
 function classifyOpportunityRow(item) {
@@ -1762,7 +1746,7 @@ function renderDashboardOpportunitySections(items) {
   ];
   const grouped = Object.fromEntries(rowIds.map((id) => [id, []]));
 
-  filterActiveDashboardItems(items).forEach((item) => {
+  items.forEach((item) => {
     const rowId = classifyOpportunityRow(item);
     if (rowId) {
       grouped[rowId].push(item);
@@ -1785,9 +1769,9 @@ function renderDashboardOpportunitySections(items) {
 function renderDashboardScholarshipSections(items) {
   const latestMount = document.getElementById("latest-scholarships");
   const deadlineMount = document.getElementById("deadline-scholarships");
-  const scholarshipItems = filterActiveDashboardItems(items.filter(isDashboardScholarship));
+  const scholarshipItems = items.filter(isDashboardScholarship);
   const latestItems = sortByNewest(scholarshipItems).slice(0, 6);
-  const deadlineItems = sortByUpcomingDeadline(scholarshipItems).slice(0, 6);
+  const deadlineItems = sortByUpcomingDeadline(scholarshipItems.filter(isFutureDeadline)).slice(0, 6);
 
   if (latestMount) {
     latestMount.innerHTML = latestItems.length
