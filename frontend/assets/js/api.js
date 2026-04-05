@@ -73,6 +73,26 @@ async function fetchScholarshipById(id) {
   return apiRequest(`/scholarships/${id}`);
 }
 
+async function createScholarship(data) {
+  return apiRequest("/scholarships", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+async function updateScholarship(id, data) {
+  return apiRequest(`/scholarships/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data)
+  });
+}
+
+async function deleteScholarship(id) {
+  return apiRequest(`/scholarships/${id}`, {
+    method: "DELETE"
+  });
+}
+
 async function trackInteraction(data) {
   return apiRequest("/interactions", {
     method: "POST",
@@ -127,6 +147,9 @@ window.ScholarLensAPI = {
   loginUser,
   fetchScholarships,
   fetchScholarshipById,
+  createScholarship,
+  updateScholarship,
+  deleteScholarship,
   trackInteraction,
   applyForScholarship,
   fetchUserApplications,

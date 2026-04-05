@@ -1293,13 +1293,6 @@ async function runAI(button) {
   }
 }
 
-function toggleAdminForm() {
-  const form = document.getElementById("admin-add-form");
-  if (form) {
-    form.style.display = form.style.display === "none" ? "block" : "none";
-  }
-}
-
 function handleFiles(input) {
   const list = document.getElementById("file-list");
   if (!list || !input?.files) {
@@ -1646,6 +1639,306 @@ async function renderAdminUsersPage() {
   }
 }
 
+function createAdminScholarshipRow(scholarship) {
+  return `
+    <tr>
+      <td><strong>${escapeHtml(scholarship.title)}</strong></td>
+      <td>${escapeHtml(scholarship.provider || scholarship.region || "N/A")}</td>
+      <td class="mono">${escapeHtml(scholarship.fundingAmount || "N/A")}</td>
+      <td class="mono" style="font-size:0.82rem;">${escapeHtml(formatDate(scholarship.deadline))}</td>
+      <td>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <button class="btn btn-sm btn-outline" type="button" onclick="handleAdminScholarshipEdit('${escapeHtml(scholarship.id)}')">Edit</button>
+          <button class="btn btn-sm" type="button" onclick="handleAdminScholarshipDelete('${escapeHtml(scholarship.id)}')" style="background:rgba(192,57,43,0.1); color:var(--red); border-color:rgba(192,57,43,0.25);">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function resetAdminScholarshipForm() {
+  const idInput = document.getElementById("admin-scholarship-id");
+  const titleInput = document.getElementById("admin-scholarship-title");
+  const descriptionInput = document.getElementById("admin-scholarship-description");
+  const providerInput = document.getElementById("admin-scholarship-provider");
+  const amountInput = document.getElementById("admin-scholarship-amount");
+  const deadlineInput = document.getElementById("admin-scholarship-deadline");
+  const degreeInput = document.getElementById("admin-scholarship-degree");
+  const eligibilityInput = document.getElementById("admin-scholarship-eligibility");
+  const feedback = document.getElementById("admin-scholarship-feedback");
+  const formTitle = document.getElementById("admin-scholarship-form-title");
+  const saveButton = document.getElementById("admin-scholarship-save");
+
+  if (idInput) {
+    idInput.value = "";
+  }
+  if (titleInput) {
+    titleInput.value = "";
+  }
+  if (descriptionInput) {
+    descriptionInput.value = "";
+  }
+  if (providerInput) {
+    providerInput.value = "";
+  }
+  if (amountInput) {
+    amountInput.value = "";
+  }
+  if (deadlineInput) {
+    deadlineInput.value = "";
+  }
+  if (degreeInput) {
+    degreeInput.value = "All";
+  }
+  if (eligibilityInput) {
+    eligibilityInput.value = "";
+  }
+  if (feedback) {
+    feedback.textContent = "";
+    feedback.style.color = "var(--text)";
+  }
+  if (formTitle) {
+    formTitle.textContent = "Add New Scholarship";
+  }
+  if (saveButton) {
+    saveButton.textContent = "Save Scholarship";
+  }
+}
+
+function populateAdminScholarshipForm(scholarship) {
+  const idInput = document.getElementById("admin-scholarship-id");
+  const titleInput = document.getElementById("admin-scholarship-title");
+  const descriptionInput = document.getElementById("admin-scholarship-description");
+  const providerInput = document.getElementById("admin-scholarship-provider");
+  const amountInput = document.getElementById("admin-scholarship-amount");
+  const deadlineInput = document.getElementById("admin-scholarship-deadline");
+  const degreeInput = document.getElementById("admin-scholarship-degree");
+  const eligibilityInput = document.getElementById("admin-scholarship-eligibility");
+  const formTitle = document.getElementById("admin-scholarship-form-title");
+  const saveButton = document.getElementById("admin-scholarship-save");
+
+  if (idInput) {
+    idInput.value = scholarship.id;
+  }
+  if (titleInput) {
+    titleInput.value = scholarship.title || "";
+  }
+  if (descriptionInput) {
+    descriptionInput.value = scholarship.description || "";
+  }
+  if (providerInput) {
+    providerInput.value = scholarship.provider || scholarship.region || "";
+  }
+  if (amountInput) {
+    const amountValue = scholarship.fundingAmount || scholarship.funding || "";
+    amountInput.value = String(amountValue).replace(/[^0-9.]/g, "");
+  }
+  if (deadlineInput) {
+    deadlineInput.value = scholarship.deadline ? new Date(scholarship.deadline).toISOString().split("T")[0] : "";
+  }
+  if (degreeInput) {
+    degreeInput.value = scholarship.degree || "All";
+  }
+  if (eligibilityInput) {
+    eligibilityInput.value = scholarship.eligibility || "";
+  }
+  if (formTitle) {
+    formTitle.textContent = "Edit Scholarship";
+  }
+  if (saveButton) {
+    saveButton.textContent = "Update Scholarship";
+  }
+}
+
+function openAdminScholarshipForm() {
+  const form = document.getElementById("admin-add-form");
+  if (!form) {
+    return;
+  }
+  form.style.display = "block";
+}
+
+function closeAdminScholarshipForm() {
+  const form = document.getElementById("admin-add-form");
+  if (!form) {
+    return;
+  }
+  form.style.display = "none";
+  resetAdminScholarshipForm();
+}
+
+function toggleAdminForm() {
+  const form = document.getElementById("admin-add-form");
+  if (form) {
+    const isHidden = form.style.display === "none" || !form.style.display;
+    form.style.display = isHidden ? "block" : "none";
+    if (!isHidden) {
+      resetAdminScholarshipForm();
+    }
+  }
+}
+
+async function handleAdminScholarshipEdit(id) {
+  const api = getApi();
+  if (!api) {
+    return;
+  }
+
+  let scholarship = (window.adminScholarships || []).find((item) => item.id === id);
+  if (!scholarship) {
+    try {
+      const response = await api.fetchScholarshipById(id);
+      scholarship = response.data;
+    } catch (error) {
+      alert(error.message || "Unable to load scholarship for editing.");
+      return;
+    }
+  }
+
+  populateAdminScholarshipForm(scholarship);
+  openAdminScholarshipForm();
+}
+
+async function handleAdminScholarshipDelete(id) {
+  const api = getApi();
+  if (!api) {
+    return;
+  }
+
+  const confirmed = window.confirm("Are you sure you want to delete this scholarship?");
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await api.deleteScholarship(id);
+    await renderAdminScholarshipsPage();
+  } catch (error) {
+    alert(error.message || "Failed to delete scholarship.");
+  }
+}
+
+async function renderAdminScholarshipsPage() {
+  const api = getApi();
+  if (!api || !window.location.pathname.endsWith("admin-scholarships.html")) {
+    return;
+  }
+
+  const tbody = document.getElementById("admin-scholarship-list");
+  const feedback = document.getElementById("admin-scholarship-feedback");
+  if (!tbody) {
+    return;
+  }
+
+  tbody.innerHTML = '<tr><td colspan="5" style="padding:1rem;">Loading scholarships...</td></tr>';
+  if (feedback) {
+    feedback.textContent = "";
+    feedback.style.color = "var(--text)";
+  }
+
+  try {
+    const response = await api.fetchScholarships();
+    const scholarships = response.data || [];
+    window.adminScholarships = scholarships;
+
+    tbody.innerHTML = scholarships.length
+      ? scholarships.map(createAdminScholarshipRow).join("")
+      : '<tr><td colspan="5" style="padding:1rem;">No scholarships found. Add one to get started.</td></tr>';
+  } catch (error) {
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:1rem; color:var(--red);">${escapeHtml(error.message || "Failed to load scholarships.")}</td></tr>`;
+  }
+}
+
+async function handleAdminScholarshipSave() {
+  const api = getApi();
+  if (!api) {
+    return;
+  }
+
+  const idInput = document.getElementById("admin-scholarship-id");
+  const titleInput = document.getElementById("admin-scholarship-title");
+  const descriptionInput = document.getElementById("admin-scholarship-description");
+  const providerInput = document.getElementById("admin-scholarship-provider");
+  const amountInput = document.getElementById("admin-scholarship-amount");
+  const deadlineInput = document.getElementById("admin-scholarship-deadline");
+  const degreeInput = document.getElementById("admin-scholarship-degree");
+  const eligibilityInput = document.getElementById("admin-scholarship-eligibility");
+  const feedback = document.getElementById("admin-scholarship-feedback");
+  const saveButton = document.getElementById("admin-scholarship-save");
+
+  if (!titleInput || !descriptionInput || !deadlineInput || !saveButton) {
+    return;
+  }
+
+  const scholarshipId = idInput?.value || null;
+  const title = titleInput.value.trim();
+  const description = descriptionInput.value.trim();
+  const provider = providerInput?.value.trim() || null;
+  const amount = amountInput?.value ? `₹${Number(amountInput.value).toLocaleString("en-IN")}` : null;
+  const deadline = deadlineInput.value;
+  const degree = degreeInput?.value || null;
+  const eligibility = eligibilityInput?.value.trim() || null;
+
+  if (!title || !description || !deadline) {
+    if (feedback) {
+      feedback.textContent = "Title, description, and deadline are required.";
+      feedback.style.color = "var(--red)";
+    }
+    return;
+  }
+
+  saveButton.disabled = true;
+  saveButton.textContent = scholarshipId ? "Updating..." : "Saving...";
+
+  try {
+    if (scholarshipId) {
+      await api.updateScholarship(scholarshipId, {
+        title,
+        description,
+        deadline,
+        provider,
+        funding: amount,
+        degree,
+        eligibility
+      });
+      if (feedback) {
+        feedback.textContent = "Scholarship updated successfully.";
+      }
+    } else {
+      await api.createScholarship({
+        title,
+        description,
+        deadline,
+        provider,
+        funding: amount,
+        degree,
+        eligibility
+      });
+      if (feedback) {
+        feedback.textContent = "Scholarship saved successfully.";
+      }
+    }
+
+    if (feedback) {
+      feedback.style.color = "var(--teal)";
+    }
+
+    resetAdminScholarshipForm();
+    closeAdminScholarshipForm();
+    await renderAdminScholarshipsPage();
+  } catch (error) {
+    if (feedback) {
+      feedback.textContent = error.message || (scholarshipId ? "Failed to update scholarship." : "Failed to save scholarship.");
+      feedback.style.color = "var(--red)";
+    }
+  } finally {
+    saveButton.disabled = false;
+    if (saveButton) {
+      saveButton.textContent = scholarshipId ? "Update Scholarship" : "Save Scholarship";
+    }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   requireRole();
   renderNav();
@@ -1657,6 +1950,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderDashboardData();
   renderAdminDashboard();
   renderAdminUsersPage();
+  renderAdminScholarshipsPage();
   renderNotificationsPage();
   renderApplicationsPage();
   renderLandingShowcase();
