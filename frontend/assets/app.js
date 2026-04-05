@@ -453,6 +453,10 @@ function renderEnsembleBreakdown(scholarship) {
           <strong>${formatScoreValue(breakdown.metaModelScore)}</strong>
         </div>
         <div class="ensemble-metric">
+          <span class="ensemble-label">Classifier</span>
+          <strong>${formatScoreValue(breakdown.classifierScore)}</strong>
+        </div>
+        <div class="ensemble-metric">
           <span class="ensemble-label">Popularity</span>
           <strong>${formatScoreValue(breakdown.popularityScore)}</strong>
         </div>

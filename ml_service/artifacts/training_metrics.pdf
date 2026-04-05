@@ -1,0 +1,104 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 2247 >>
+stream
+BT
+/F1 12 Tf
+/F1 16 Tf
+1 0 0 1 50 760 Tm (ScholarLens ML Training Report) Tj
+/F1 11 Tf
+1 0 0 1 50 744 Tm (users: 106) Tj
+/F1 11 Tf
+1 0 0 1 50 728 Tm (scholarships: 12) Tj
+/F1 11 Tf
+1 0 0 1 50 712 Tm (applications: 136) Tj
+/F1 11 Tf
+1 0 0 1 50 696 Tm (interactions: 819) Tj
+/F1 11 Tf
+1 0 0 1 50 680 Tm (rows: 1273) Tj
+/F1 11 Tf
+1 0 0 1 50 664 Tm (sklearnEnabled: True) Tj
+/F1 11 Tf
+1 0 0 1 50 648 Tm (xgboostEnabled: False) Tj
+/F1 11 Tf
+1 0 0 1 50 632 Tm (classifierEnsembleTrained: True) Tj
+/F1 11 Tf
+1 0 0 1 50 616 Tm (structuredModelTrained: True) Tj
+/F1 11 Tf
+1 0 0 1 50 600 Tm (metaModelTrained: True) Tj
+/F1 11 Tf
+1 0 0 1 50 584 Tm (evaluation:) Tj
+/F1 11 Tf
+1 0 0 1 50 568 Tm (evaluation.labelMean: 0.3617) Tj
+/F1 11 Tf
+1 0 0 1 50 552 Tm (evaluation.positiveLabelRate: 0.4533) Tj
+/F1 11 Tf
+1 0 0 1 50 536 Tm (evaluation.structuredModel:) Tj
+/F1 11 Tf
+1 0 0 1 50 520 Tm (evaluation.structuredModel.mae: 0.2049) Tj
+/F1 11 Tf
+1 0 0 1 50 504 Tm (evaluation.structuredModel.rmse: 0.2615) Tj
+/F1 11 Tf
+1 0 0 1 50 488 Tm (evaluation.structuredModel.r2: 0.4133) Tj
+/F1 11 Tf
+1 0 0 1 50 472 Tm (evaluation.metaModel:) Tj
+/F1 11 Tf
+1 0 0 1 50 456 Tm (evaluation.metaModel.mae: 0.2031) Tj
+/F1 11 Tf
+1 0 0 1 50 440 Tm (evaluation.metaModel.rmse: 0.2619) Tj
+/F1 11 Tf
+1 0 0 1 50 424 Tm (evaluation.metaModel.r2: 0.4114) Tj
+/F1 11 Tf
+1 0 0 1 50 408 Tm (evaluation.top3HitRate: 0.6667) Tj
+/F1 11 Tf
+1 0 0 1 50 392 Tm (classifierEvaluation:) Tj
+/F1 11 Tf
+1 0 0 1 50 376 Tm (classifierEvaluation.accuracy: 0.7451) Tj
+/F1 11 Tf
+1 0 0 1 50 360 Tm (classifierEvaluation.precision: 0.6624) Tj
+/F1 11 Tf
+1 0 0 1 50 344 Tm (classifierEvaluation.recall: 0.8966) Tj
+/F1 11 Tf
+1 0 0 1 50 328 Tm (classifierEvaluation.f1: 0.7619) Tj
+/F1 11 Tf
+1 0 0 1 50 312 Tm (classifierEvaluation.avgPositiveProbability: 0.4452) Tj
+/F1 11 Tf
+1 0 0 1 50 296 Tm (classifierEvaluation.testSize: 255) Tj
+/F1 11 Tf
+1 0 0 1 50 280 Tm (classifierEvaluation.confusionMatrix:) Tj
+/F1 11 Tf
+1 0 0 1 50 264 Tm (classifierEvaluation.confusionMatrix.tn: 86) Tj
+/F1 11 Tf
+1 0 0 1 50 248 Tm (classifierEvaluation.confusionMatrix.fp: 53) Tj
+/F1 11 Tf
+1 0 0 1 50 232 Tm (classifierEvaluation.confusionMatrix.fn: 12) Tj
+/F1 11 Tf
+1 0 0 1 50 216 Tm (classifierEvaluation.confusionMatrix.tp: 104) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000002540 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2610
+%%EOF

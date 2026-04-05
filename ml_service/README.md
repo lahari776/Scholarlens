@@ -3,8 +3,9 @@
 ## What it does
 This service scores scholarships with an ensemble of:
 - content similarity between the user profile text and scholarship text
-- structured compatibility features such as region, degree, category, skills, and interests
-- a learned tree-based model when `scikit-learn` is installed
+- a structured regression model for profile-to-scholarship fit
+- a learned behavior model for interaction/application strength
+- a classifier ensemble that predicts application likelihood probabilities
 - interaction history such as saves, recommendation clicks, detail clicks, and applies
 
 If `scikit-learn` is not installed, the service still runs with the first two ensemble components.
@@ -50,9 +51,19 @@ This creates `ml_service/data/training_dataset.json`.
 npm run train:ml
 ```
 
-This creates `ml_service/artifacts/ensemble_artifacts.pkl`.
+This creates:
+- `ml_service/artifacts/ensemble_artifacts.pkl`
+- `ml_service/artifacts/training_metrics.pdf`
 
 When the ML service starts, it loads those artifacts automatically if they exist. If not, it falls back to live in-memory fitting.
+
+The saved training summary now also includes simple evaluation signals:
+- `structuredModel.mae`, `rmse`, and `r2`
+- `metaModel.mae`, `rmse`, and `r2`
+- `classifierEvaluation.accuracy`, `precision`, `recall`, and `f1`
+- `classifierEvaluation.confusionMatrix`
+- `top3HitRate` for quick ranking sanity checks
+- dataset label distribution with `labelMean` and `positiveLabelRate`
 
 ## Seed sample data
 ```powershell

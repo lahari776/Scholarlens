@@ -5,16 +5,44 @@ import pickle
 from collections import Counter, defaultdict
 
 try:
-    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.ensemble import (
+        GradientBoostingClassifier,
+        GradientBoostingRegressor,
+        RandomForestClassifier,
+        RandomForestRegressor,
+        VotingClassifier,
+    )
     from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score, confusion_matrix, f1_score, precision_score, recall_score
     from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.model_selection import train_test_split
 
     SKLEARN_AVAILABLE = True
 except ImportError:
+    GradientBoostingClassifier = None
+    GradientBoostingRegressor = None
+    RandomForestClassifier = None
     RandomForestRegressor = None
     TfidfVectorizer = None
+    LogisticRegression = None
+    VotingClassifier = None
+    accuracy_score = None
+    confusion_matrix = None
+    f1_score = None
+    precision_score = None
+    recall_score = None
     cosine_similarity = None
+    train_test_split = None
     SKLEARN_AVAILABLE = False
+
+try:
+    from xgboost import XGBClassifier
+
+    XGBOOST_AVAILABLE = True
+except ImportError:
+    XGBClassifier = None
+    XGBOOST_AVAILABLE = False
 
 
 ARTIFACTS_DIR = os.path.join(os.path.dirname(__file__), "artifacts")
@@ -256,6 +284,199 @@ def train_meta_model(rows, labels):
     return model
 
 
+def train_structured_model(rows, labels):
+    if not SKLEARN_AVAILABLE or len(rows) < 8 or len(set(labels)) < 2:
+        return None
+    model = GradientBoostingRegressor(
+        n_estimators=160,
+        learning_rate=0.05,
+        max_depth=3,
+        random_state=42,
+    )
+    model.fit(rows, labels)
+    return model
+
+
+def build_binary_labels(labels, positive_threshold=0.55):
+    return [1 if label >= positive_threshold else 0 for label in labels]
+
+
+def build_classifier_estimators():
+    estimators = [
+        ("rf", RandomForestClassifier(n_estimators=140, max_depth=8, min_samples_leaf=2, random_state=42)),
+        ("gb", GradientBoostingClassifier(n_estimators=140, learning_rate=0.05, max_depth=3, random_state=42)),
+        ("lr", LogisticRegression(max_iter=1200, class_weight="balanced", random_state=42)),
+    ]
+
+    if XGBOOST_AVAILABLE:
+        estimators.insert(
+            0,
+            (
+                "xgb",
+                XGBClassifier(
+                    n_estimators=120,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.9,
+                    colsample_bytree=0.9,
+                    eval_metric="logloss",
+                    random_state=42,
+                ),
+            ),
+        )
+
+    return estimators
+
+
+def train_classifier_ensemble(rows, labels):
+    binary_labels = build_binary_labels(labels)
+    if not SKLEARN_AVAILABLE or len(rows) < 30 or len(set(binary_labels)) < 2:
+        return None
+
+    estimators = build_classifier_estimators()
+    weights = [4, 3, 2, 1] if XGBOOST_AVAILABLE else [3, 2, 1]
+    model = VotingClassifier(estimators=estimators, voting="soft", weights=weights)
+    model.fit(rows, binary_labels)
+    return model
+
+
+def mean_absolute_error_score(actual, predicted):
+    if not actual:
+        return None
+    return sum(abs(left - right) for left, right in zip(actual, predicted)) / len(actual)
+
+
+def root_mean_squared_error_score(actual, predicted):
+    if not actual:
+        return None
+    return math.sqrt(sum((left - right) ** 2 for left, right in zip(actual, predicted)) / len(actual))
+
+
+def r2_score_value(actual, predicted):
+    if not actual:
+        return None
+    mean_actual = sum(actual) / len(actual)
+    total_sum_squares = sum((value - mean_actual) ** 2 for value in actual)
+    if total_sum_squares <= 0:
+        return None
+    residual_sum_squares = sum((left - right) ** 2 for left, right in zip(actual, predicted))
+    return 1.0 - (residual_sum_squares / total_sum_squares)
+
+
+def top_k_hit_rate(rows, labels, structured_model, meta_model, top_k=3):
+    if not rows or not labels:
+        return None
+
+    scored = []
+    for index, row in enumerate(rows):
+        score = 0.0
+        used = 0
+        if structured_model is not None:
+            score += float(structured_model.predict([row])[0])
+            used += 1
+        if meta_model is not None:
+            score += float(meta_model.predict([row])[0])
+            used += 1
+        if used == 0:
+            continue
+        scored.append((index, score / used, labels[index]))
+
+    if not scored:
+        return None
+
+    scored.sort(key=lambda item: item[1], reverse=True)
+    top_slice = scored[: min(top_k, len(scored))]
+    positives = sum(1 for _, _, label in top_slice if label >= 0.55)
+    return positives / len(top_slice)
+
+
+def evaluate_models(rows, labels, structured_model, meta_model):
+    evaluation = {
+        "labelMean": round(sum(labels) / len(labels), 4) if labels else None,
+        "positiveLabelRate": round(sum(1 for item in labels if item >= 0.55) / len(labels), 4) if labels else None,
+        "structuredModel": None,
+        "metaModel": None,
+        "top3HitRate": None,
+    }
+
+    if rows and labels and structured_model is not None:
+        structured_predictions = [
+            float(max(0.0, min(structured_model.predict([row])[0], 1.0)))
+            for row in rows
+        ]
+        evaluation["structuredModel"] = {
+            "mae": round(mean_absolute_error_score(labels, structured_predictions), 4),
+            "rmse": round(root_mean_squared_error_score(labels, structured_predictions), 4),
+            "r2": round(r2_score_value(labels, structured_predictions), 4),
+        }
+
+    if rows and labels and meta_model is not None:
+        meta_predictions = [
+            float(max(0.0, min(meta_model.predict([row])[0], 1.0)))
+            for row in rows
+        ]
+        evaluation["metaModel"] = {
+            "mae": round(mean_absolute_error_score(labels, meta_predictions), 4),
+            "rmse": round(root_mean_squared_error_score(labels, meta_predictions), 4),
+            "r2": round(r2_score_value(labels, meta_predictions), 4),
+        }
+
+    top3 = top_k_hit_rate(rows, labels, structured_model, meta_model, top_k=3)
+    if top3 is not None:
+        evaluation["top3HitRate"] = round(top3, 4)
+
+    return evaluation
+
+
+def predict_classifier_probability(classifier_model, row):
+    if classifier_model is None:
+        return None
+    probabilities = classifier_model.predict_proba([row])[0]
+    if len(probabilities) < 2:
+        return None
+    return float(max(0.0, min(probabilities[1], 1.0)))
+
+
+def evaluate_classifier_model(rows, labels):
+    binary_labels = build_binary_labels(labels)
+    if not SKLEARN_AVAILABLE or len(rows) < 40 or len(set(binary_labels)) < 2:
+        return None
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        rows,
+        binary_labels,
+        test_size=0.2,
+        random_state=42,
+        stratify=binary_labels,
+    )
+
+    estimator = VotingClassifier(
+        estimators=build_classifier_estimators(),
+        voting="soft",
+        weights=[4, 3, 2, 1] if XGBOOST_AVAILABLE else [3, 2, 1],
+    )
+    estimator.fit(X_train, y_train)
+    predicted = estimator.predict(X_test)
+    probabilities = estimator.predict_proba(X_test)[:, 1]
+    confusion = confusion_matrix(y_test, predicted).ravel()
+    tn, fp, fn, tp = [int(value) for value in confusion]
+
+    return {
+        "accuracy": round(float(accuracy_score(y_test, predicted)), 4),
+        "precision": round(float(precision_score(y_test, predicted, zero_division=0)), 4),
+        "recall": round(float(recall_score(y_test, predicted, zero_division=0)), 4),
+        "f1": round(float(f1_score(y_test, predicted, zero_division=0)), 4),
+        "avgPositiveProbability": round(float(sum(probabilities) / len(probabilities)), 4),
+        "testSize": len(y_test),
+        "confusionMatrix": {
+            "tn": tn,
+            "fp": fp,
+            "fn": fn,
+            "tp": tp,
+        },
+    }
+
+
 def train_artifacts(payload):
     users = payload.get("users") or []
     scholarships = payload.get("scholarships") or []
@@ -275,9 +496,15 @@ def train_artifacts(payload):
         scholarship_matrix = text_vectorizer.fit_transform(scholarship_texts)
 
     meta_model = train_meta_model(rows, labels)
+    structured_model = train_structured_model(rows, labels)
+    classifier_model = train_classifier_ensemble(rows, labels)
+    evaluation = evaluate_models(rows, labels, structured_model, meta_model)
+    classifier_evaluation = evaluate_classifier_model(rows, labels)
 
     return {
         "meta_model": meta_model,
+        "structured_model": structured_model,
+        "classifier_model": classifier_model,
         "text_vectorizer": text_vectorizer,
         "scholarship_matrix": scholarship_matrix,
         "scholarship_ids": scholarship_ids,
@@ -290,7 +517,12 @@ def train_artifacts(payload):
             "interactions": len(interactions),
             "rows": len(rows),
             "sklearnEnabled": SKLEARN_AVAILABLE,
+            "xgboostEnabled": XGBOOST_AVAILABLE,
+            "classifierEnsembleTrained": classifier_model is not None,
+            "structuredModelTrained": structured_model is not None,
             "metaModelTrained": meta_model is not None,
+            "evaluation": evaluation,
+            "classifierEvaluation": classifier_evaluation,
         },
     }
 
@@ -308,7 +540,7 @@ def load_artifacts(path=ARTIFACTS_PATH):
         return pickle.load(file_obj)
 
 
-def explain_reasons(user, scholarship, content_score_value, compatibility_score_value, meta_score):
+def explain_reasons(user, scholarship, content_score_value, compatibility_score_value, meta_score, classifier_score=None):
     reasons = []
     if normalize_text(user.get("region")) and normalize_text(user.get("region")) == normalize_text(scholarship.get("region")):
         reasons.append("region match")
@@ -322,9 +554,11 @@ def explain_reasons(user, scholarship, content_score_value, compatibility_score_
     if content_score_value >= 0.35:
         reasons.append("high profile-text similarity")
     if compatibility_score_value >= 0.45:
-        reasons.append("strong structured compatibility")
+        reasons.append("structured model predicts strong fit")
     if meta_score is not None and meta_score >= 0.55:
-        reasons.append("learned model predicts strong application likelihood")
+        reasons.append("behavior model predicts strong application likelihood")
+    if classifier_score is not None and classifier_score >= 0.60:
+        reasons.append("classifier ensemble predicts a likely application match")
     return reasons[:4]
 
 
@@ -381,8 +615,14 @@ def recommend(payload, artifacts=None):
     rows, labels, popularity, max_popularity = build_training_rows(users_by_id, scholarships_by_id, applications, interactions)
 
     meta_model = artifacts.get("meta_model") if artifacts else None
+    structured_model = artifacts.get("structured_model") if artifacts else None
+    classifier_model = artifacts.get("classifier_model") if artifacts else None
     if meta_model is None:
         meta_model = train_meta_model(rows, labels)
+    if structured_model is None:
+        structured_model = train_structured_model(rows, labels)
+    if classifier_model is None:
+        classifier_model = train_classifier_ensemble(rows, labels)
 
     effective_popularity = artifacts.get("popularity") if artifacts else popularity
     effective_max_popularity = artifacts.get("max_popularity") if artifacts else max_popularity
@@ -395,14 +635,37 @@ def recommend(payload, artifacts=None):
         features = build_feature_vector(user, scholarship, popularity_score)
         compatibility = compatibility_score(features)
         meta_score = None
+        structured_score = None
+        classifier_score = predict_classifier_probability(classifier_model, features)
+        if structured_model is not None:
+            structured_score = float(max(0.0, min(structured_model.predict([features])[0], 1.0)))
         if meta_model is not None:
             meta_score = float(max(0.0, min(meta_model.predict([features])[0], 1.0)))
-        if meta_score is None:
+        effective_structured_score = structured_score if structured_score is not None else compatibility
+        if classifier_score is not None and structured_score is not None and meta_score is not None:
+            final_score = (
+                0.18 * content[index]
+                + 0.22 * effective_structured_score
+                + 0.25 * meta_score
+                + 0.35 * classifier_score
+            )
+        elif classifier_score is not None and structured_score is not None:
+            final_score = 0.25 * content[index] + 0.35 * effective_structured_score + 0.40 * classifier_score
+        elif classifier_score is not None and meta_score is not None:
+            final_score = 0.22 * content[index] + 0.28 * meta_score + 0.35 * classifier_score + 0.15 * compatibility
+        elif meta_score is None and structured_score is None:
             final_score = 0.42 * content[index] + 0.40 * compatibility
+        elif meta_score is None:
+            final_score = 0.35 * content[index] + 0.65 * effective_structured_score
+        elif structured_score is None:
+            final_score = 0.30 * content[index] + 0.30 * compatibility + 0.40 * meta_score
         else:
-            final_score = 0.25 * content[index] + 0.35 * compatibility + 0.40 * meta_score
+            final_score = 0.25 * content[index] + 0.35 * effective_structured_score + 0.40 * meta_score
 
-        final_score = max(0.0, min(final_score + profile_fit_adjustment(user, scholarship), 1.0))
+        if structured_score is None and classifier_score is None:
+            final_score = max(0.0, min(final_score + (profile_fit_adjustment(user, scholarship) * 0.35), 1.0))
+        else:
+            final_score = max(0.0, min(final_score, 1.0))
 
         recommendations.append(
             {
@@ -410,13 +673,16 @@ def recommend(payload, artifacts=None):
                 "matchScore": round(final_score * 100, 2),
                 "ensembleBreakdown": {
                     "contentScore": round(content[index] * 100, 2),
-                    "compatibilityScore": round(compatibility * 100, 2),
+                    "compatibilityScore": round(effective_structured_score * 100, 2),
                     "metaModelScore": round(meta_score * 100, 2) if meta_score is not None else None,
+                    "classifierScore": round(classifier_score * 100, 2) if classifier_score is not None else None,
                     "popularityScore": round(popularity_score * 100, 2),
                     "sklearnEnabled": SKLEARN_AVAILABLE,
                     "artifactBacked": bool(artifacts),
+                    "structuredModelBacked": structured_score is not None,
+                    "classifierEnsembleBacked": classifier_score is not None,
                 },
-                "reasons": explain_reasons(user, scholarship, content[index], compatibility, meta_score),
+                "reasons": explain_reasons(user, scholarship, content[index], effective_structured_score, meta_score, classifier_score),
             }
         )
 
