@@ -15,14 +15,7 @@ function formatScholarship(scholarship) {
     region: source.region,
     fundingAmount: source.funding || source.fundingAmount || null,
     degree: source.degree || null,
-    category: source.category || null,
-    provider: source.provider || null,
-    eligibleSkills: source.eligibleSkills || [],
-    createdBy: source.createdBy ? String(source.createdBy._id || source.createdBy) : null,
-    createdAt: source.createdAt,
-    updatedAt: source.updatedAt
-  };
-}
+    eligibility: source.eligibility || null,
 
 async function getScholarships(req, res, next) {
   try {
@@ -63,6 +56,7 @@ async function createScholarship(req, res, next) {
       region: req.body.region || null,
       funding: req.body.funding || req.body.fundingAmount || null,
       degree: req.body.degree || null,
+      eligibility: req.body.eligibility || null,
       category: req.body.category || null,
       provider: req.body.provider || null,
       eligibleSkills: Array.isArray(req.body.eligibleSkills)
@@ -100,6 +94,7 @@ async function updateScholarship(req, res, next) {
         region: req.body.region ?? existing.region,
         funding: req.body.funding ?? req.body.fundingAmount ?? existing.funding,
         degree: req.body.degree ?? existing.degree,
+        eligibility: req.body.eligibility ?? existing.eligibility,
         category: req.body.category ?? existing.category,
         provider: req.body.provider ?? existing.provider,
         eligibleSkills: req.body.eligibleSkills

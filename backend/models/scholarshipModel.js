@@ -32,6 +32,11 @@ const scholarshipSchema = new mongoose.Schema(
       trim: true,
       default: null
     },
+    eligibility: {
+      type: String,
+      trim: true,
+      default: null
+    },
     category: {
       type: String,
       trim: true,
