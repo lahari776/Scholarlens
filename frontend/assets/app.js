@@ -337,6 +337,11 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function formatCompactNumber(value) {
+  const number = Number(value) || 0;
+  return new Intl.NumberFormat("en-IN").format(number);
+}
+
 function logout() {
   if (window.ScholarLensAuth) {
     window.ScholarLensAuth.logout();
@@ -345,6 +350,375 @@ function logout() {
 
   localStorage.removeItem(APP_STORAGE_KEY);
   window.location.href = "index.html";
+}
+
+async function trackScholarshipInteraction(eventType, scholarshipId, source, metadata = null) {
+  const api = getApi();
+  const session = getSession();
+
+  if (!api || !session.userId || !scholarshipId) {
+    return;
+  }
+
+  try {
+    await api.trackInteraction({
+      userId: session.userId,
+      scholarshipId,
+      eventType,
+      source,
+      metadata
+    });
+  } catch {
+    // Tracking should never block the user flow.
+  }
+}
+
+function handleSaveToggle(element, scholarshipId, source) {
+  if (!element) {
+    return;
+  }
+
+  element.classList.toggle("saved");
+  const wasSaved = element.classList.contains("saved");
+  trackScholarshipInteraction(wasSaved ? "save" : "view", scholarshipId, source, {
+    toggleSaved: wasSaved
+  });
+}
+
+function trackApplyIntent(scholarshipId, source) {
+  trackScholarshipInteraction("view", scholarshipId, `${source}_apply_link`);
+}
+
+function trackDetailIntent(scholarshipId, source) {
+  trackScholarshipInteraction("detail_click", scholarshipId, source);
+}
+
+function trackRecommendationIntent(scholarshipId, source) {
+  trackScholarshipInteraction("recommendation_click", scholarshipId, source);
+}
+
+function formatScoreValue(value) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "N/A";
+  }
+
+  return `${Math.round(value)}%`;
+}
+
+function renderReasonTags(reasons) {
+  if (!Array.isArray(reasons) || !reasons.length) {
+    return '<span class="tag">Profile-aligned</span>';
+  }
+
+  return reasons.map((reason) => `<span class="tag">${escapeHtml(reason)}</span>`).join("");
+}
+
+function renderEnsembleBreakdown(scholarship) {
+  const breakdown = scholarship.ensembleBreakdown;
+  if (!breakdown) {
+    return `
+      <div class="ensemble-panel">
+        <div class="ensemble-header">
+          <strong>Recommendation Signals</strong>
+          <span class="tag">Fallback Mode</span>
+        </div>
+        <p class="ensemble-copy">This result is using the baseline scorer, so detailed ensemble diagnostics are not available.</p>
+      </div>
+    `;
+  }
+
+  const modelLabel = breakdown.artifactBacked ? "Trained Artifacts" : breakdown.metaModelScore !== null ? "Live Ensemble" : "Hybrid Rules";
+  const sklearnLabel = breakdown.sklearnEnabled ? "scikit-learn" : "No sklearn";
+
+  return `
+    <div class="ensemble-panel">
+      <div class="ensemble-header">
+        <strong>Ensemble Breakdown</strong>
+        <div class="ensemble-header-tags">
+          <span class="tag tag-teal">${modelLabel}</span>
+          <span class="tag">${sklearnLabel}</span>
+        </div>
+      </div>
+      <div class="ensemble-grid">
+        <div class="ensemble-metric">
+          <span class="ensemble-label">Content</span>
+          <strong>${formatScoreValue(breakdown.contentScore)}</strong>
+        </div>
+        <div class="ensemble-metric">
+          <span class="ensemble-label">Compatibility</span>
+          <strong>${formatScoreValue(breakdown.compatibilityScore)}</strong>
+        </div>
+        <div class="ensemble-metric">
+          <span class="ensemble-label">Meta Model</span>
+          <strong>${formatScoreValue(breakdown.metaModelScore)}</strong>
+        </div>
+        <div class="ensemble-metric">
+          <span class="ensemble-label">Popularity</span>
+          <strong>${formatScoreValue(breakdown.popularityScore)}</strong>
+        </div>
+      </div>
+      <div class="ensemble-reasons">
+        ${renderReasonTags(scholarship.reasons)}
+      </div>
+    </div>
+  `;
+}
+
+async function fetchScholarshipDetail(scholarshipId) {
+  const api = getApi();
+
+  if (api?.fetchScholarshipById) {
+    return api.fetchScholarshipById(scholarshipId);
+  }
+
+  const session = getSession();
+  const response = await fetch(`http://localhost:5000/api/scholarships/${encodeURIComponent(scholarshipId)}`, {
+    headers: session.token
+      ? {
+          Authorization: `Bearer ${session.token}`
+        }
+      : {}
+  });
+
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload?.message || "Failed to load scholarship");
+  }
+
+  return payload;
+}
+
+function buildDetailEligibility(scholarship) {
+  const items = [];
+
+  if (scholarship.degree) {
+    items.push(`Open to ${scholarship.degree} students`);
+  }
+  if (scholarship.region) {
+    items.push(`Preferred region: ${scholarship.region}`);
+  }
+  if (scholarship.category) {
+    items.push(`Category focus: ${scholarship.category}`);
+  }
+  if (Array.isArray(scholarship.eligibleSkills) && scholarship.eligibleSkills.length) {
+    items.push(`Skills valued: ${scholarship.eligibleSkills.join(", ")}`);
+  }
+
+  return items.length
+    ? items
+    : ["See provider guidance and application notes for the full eligibility requirements."];
+}
+
+async function renderDetailPage() {
+  if (document.body.dataset.page !== "detail") {
+    return;
+  }
+
+  const scholarshipId = new URLSearchParams(window.location.search).get("id");
+  if (!scholarshipId) {
+    return;
+  }
+
+  const session = getSession();
+  const card = document.querySelector(".two-column-page .card");
+  const sideCards = document.querySelectorAll(".two-column-page > div:last-child .card, .two-column-page > div:last-child .stat-card");
+  const backLink = document.querySelector('.container.section-sm > a.btn');
+  const applyLink = document.querySelector('.two-column-page > div:last-child a.btn.btn-gold');
+  const saveButton = document.querySelector('.two-column-page > div:last-child button.btn');
+
+  if (!card || !sideCards.length) {
+    return;
+  }
+
+  try {
+    const recommendationPromise = session.userId && getApi()
+      ? getApi().fetchRecommendations(session.userId).catch(() => ({ data: [] }))
+      : Promise.resolve({ data: [] });
+
+    const [scholarshipResponse, recommendationResponse] = await Promise.all([
+      fetchScholarshipDetail(scholarshipId),
+      recommendationPromise
+    ]);
+
+    const scholarship = scholarshipResponse.data;
+    const recommended = (recommendationResponse.data || []).find((item) => item.id === scholarship.id) || null;
+    const daysLeft = getDaysLeft(scholarship.deadline);
+
+    document.title = `${scholarship.title} - ScholarLens`;
+
+    const headerTag = card.querySelector(".tag");
+    if (headerTag) {
+      headerTag.textContent = scholarship.category || scholarship.degree || "Scholarship";
+    }
+
+    const title = card.querySelector("h2");
+    if (title) {
+      title.textContent = scholarship.title;
+    }
+
+    const provider = card.querySelector("p.text-muted");
+    if (provider) {
+      provider.textContent = `Offered by - ${scholarship.provider || scholarship.region || "ScholarLens Partner"}`;
+    }
+
+    const aboutHeading = Array.from(card.querySelectorAll("h3")).find((node) => node.textContent.includes("About"));
+    if (aboutHeading?.nextElementSibling) {
+      aboutHeading.nextElementSibling.textContent = scholarship.description || "No detailed description available.";
+    }
+
+    const eligibilityHeading = Array.from(card.querySelectorAll("h3")).find((node) => node.textContent.includes("Eligibility"));
+    if (eligibilityHeading?.nextElementSibling) {
+      const items = buildDetailEligibility(scholarship);
+      eligibilityHeading.nextElementSibling.innerHTML = items.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    }
+
+    const lastHeading = card.querySelectorAll("h3")[2];
+    if (lastHeading) {
+      lastHeading.textContent = "Recommendation Signals";
+    }
+
+    if (lastHeading?.nextElementSibling) {
+      const reasons = recommended?.reasons?.length ? recommended.reasons : ["Profile and scholarship signals"];
+      lastHeading.nextElementSibling.innerHTML = reasons.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+    }
+
+    const amountCard = sideCards[0];
+    const amountValue = amountCard?.querySelector(".stat-num");
+    if (amountValue) {
+      amountValue.textContent = scholarship.fundingAmount || "Funding available";
+    }
+
+    const deadlineCard = sideCards[1];
+    const deadlineValue = deadlineCard?.querySelector("p:not(.label)");
+    const deadlineAlert = deadlineCard?.querySelector(".alert");
+    if (deadlineValue) {
+      deadlineValue.textContent = formatDate(scholarship.deadline);
+    }
+    if (deadlineAlert) {
+      deadlineAlert.textContent = typeof daysLeft === "number"
+        ? daysLeft > 0
+          ? `${daysLeft} day${daysLeft === 1 ? "" : "s"} remaining`
+          : "Deadline has passed"
+        : "Deadline unavailable";
+    }
+
+    const matchCard = sideCards[2];
+    const matchBar = matchCard?.querySelector(".progress-fill");
+    const matchText = matchCard?.querySelector("p:not(.label)");
+    const matchScore = recommended?.matchScore ?? 0;
+    if (matchBar) {
+      matchBar.style.width = `${Math.max(0, Math.min(matchScore, 100))}%`;
+    }
+    if (matchText) {
+      matchText.textContent = recommended ? `${Math.round(matchScore)}% match` : "Refresh recommendations to see your match";
+    }
+
+    if (applyLink) {
+      applyLink.href = `apply.html?id=${encodeURIComponent(scholarship.id)}`;
+      applyLink.onclick = () => trackApplyIntent(scholarship.id, "detail_page");
+    }
+
+    if (backLink) {
+      backLink.href = "scholarships.html";
+    }
+
+    if (saveButton) {
+      saveButton.onclick = () => handleSaveToggle(saveButton, scholarship.id, "detail_page");
+    }
+
+    await trackScholarshipInteraction("view", scholarship.id, "detail_page", {
+      from: document.referrer || null
+    });
+  } catch (error) {
+    const title = card.querySelector("h2");
+    if (title) {
+      title.textContent = error.message || "Failed to load scholarship";
+    }
+  }
+}
+
+async function renderApplyPage() {
+  if (document.body.dataset.page !== "apply") {
+    return;
+  }
+
+  const scholarshipId = new URLSearchParams(window.location.search).get("id");
+  if (!scholarshipId) {
+    return;
+  }
+
+  const api = getApi();
+  const session = getSession();
+  const backLink = document.querySelector('.container.section-sm > a.btn');
+  const cancelLink = document.querySelector('#apply-cancel-link') || document.querySelector('.card a.btn.btn-outline');
+  const title = document.querySelector('.container.section-sm h2');
+  const successAlert = document.querySelector('.card .alert.alert-success');
+  const textInputs = document.querySelectorAll('.card input.form-input');
+  const statementField = document.getElementById('application-statement');
+
+  if (backLink) {
+    backLink.href = `detail.html?id=${encodeURIComponent(scholarshipId)}`;
+  }
+  if (cancelLink) {
+    cancelLink.href = `detail.html?id=${encodeURIComponent(scholarshipId)}`;
+  }
+
+  try {
+    const scholarshipPromise = fetchScholarshipDetail(scholarshipId);
+    const profilePromise = api?.fetchProfile ? api.fetchProfile().catch(() => null) : Promise.resolve(null);
+    const [response, profileResponse] = await Promise.all([scholarshipPromise, profilePromise]);
+    const scholarship = response.data;
+    const profile = profileResponse?.data || session.user || null;
+
+    if (title) {
+      title.textContent = `Apply for ${scholarship.title}`;
+    }
+    document.title = `Apply - ${scholarship.title}`;
+
+    if (textInputs[0]) {
+      textInputs[0].value = profile?.fullName || profile?.name || textInputs[0].value;
+    }
+
+    if (textInputs[1]) {
+      textInputs[1].value = profile?.email || textInputs[1].value;
+    }
+
+    if (textInputs[2] && !textInputs[2].value.trim()) {
+      textInputs[2].value = profile?.phone || "";
+    }
+
+    if (textInputs[3]) {
+      const institutionBits = [profile?.degree, profile?.specialisation].filter(Boolean);
+      if (institutionBits.length) {
+        textInputs[3].value = institutionBits.join(" - ");
+      }
+    }
+
+    if (statementField && !statementField.dataset.prefilled) {
+      const statementParts = [
+        scholarship.title ? `I am applying for ${scholarship.title}` : null,
+        profile?.degree ? `as a ${profile.degree} student` : null,
+        profile?.specialisation ? `specializing in ${profile.specialisation}` : null,
+        Array.isArray(profile?.skills) && profile.skills.length ? `with skills in ${profile.skills.slice(0, 4).join(", ")}` : null,
+        "This scholarship would help me continue building my academic and career goals."
+      ].filter(Boolean);
+      statementField.value = `${statementParts.join(" ")} `;
+      statementField.dataset.prefilled = "true";
+    }
+
+    if (successAlert) {
+      const summaryBits = [
+        profile?.fullName ? `Signed in as ${profile.fullName}` : null,
+        scholarship.fundingAmount ? `Award: ${scholarship.fundingAmount}` : null,
+        scholarship.deadline ? `Deadline: ${formatDate(scholarship.deadline)}` : null
+      ].filter(Boolean);
+      successAlert.textContent = summaryBits.length
+        ? `${summaryBits.join(" · ")}. Review the details before submitting.`
+        : "Your profile has been pre-filled. Please review before submitting.";
+    }
+  } catch {
+    // Keep the existing apply page content if lookup fails.
+  }
 }
 
 function requireRole() {
@@ -605,7 +979,7 @@ function renderScholarshipCardFromApi(scholarship, session, matchScore = null) {
           ${(scholarship.eligibleSkills || []).slice(0, 3).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
           ${!(scholarship.eligibleSkills || []).length && scholarship.category ? `<span class="tag">${escapeHtml(scholarship.category)}</span>` : ""}
         </div>
-        <span class="sc-saved" onclick="this.classList.toggle('saved')" title="Save">&#11088;</span>
+        <span class="sc-saved" onclick="handleSaveToggle(this, '${escapeHtml(scholarship.id)}', 'scholarship_grid')" title="Save">&#11088;</span>
       </div>
       <div class="sc-title">${escapeHtml(scholarship.title)}</div>
       <div style="font-size:0.82rem; color:#7a7060;">${escapeHtml(scholarship.provider || scholarship.region || "ScholarLens Partner")}</div>
@@ -617,8 +991,8 @@ function renderScholarshipCardFromApi(scholarship, session, matchScore = null) {
       </div>
       ${session.loggedIn && session.role === "student" && score !== null ? `<div class="progress-bar" style="margin-top:0.25rem;"><div class="progress-fill" style="width:${score}%"></div></div>` : ""}
       <div class="sc-actions">
-        <a class="btn btn-gold btn-sm" href="apply.html?id=${encodeURIComponent(scholarship.id)}" style="flex:1;">Apply Now</a>
-        <a class="btn btn-outline btn-sm" href="detail.html">Details</a>
+        <a class="btn btn-gold btn-sm" href="apply.html?id=${encodeURIComponent(scholarship.id)}" onclick="trackApplyIntent('${escapeHtml(scholarship.id)}', 'scholarship_grid')" style="flex:1;">Apply Now</a>
+        <a class="btn btn-outline btn-sm" href="detail.html?id=${encodeURIComponent(scholarship.id)}" onclick="trackDetailIntent('${escapeHtml(scholarship.id)}', 'scholarship_grid')">Details</a>
       </div>
     </div>
   `;
@@ -651,7 +1025,7 @@ async function renderScholarships() {
             <div style="display:flex; flex-wrap:wrap; gap:0.35rem;">
               ${scholarship.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
             </div>
-            <span class="sc-saved" onclick="this.classList.toggle('saved')" title="Save">&#11088;</span>
+            <span class="sc-saved" onclick="handleSaveToggle(this, '${scholarship.id}', 'fallback_grid')" title="Save">&#11088;</span>
           </div>
           <div class="sc-title">${scholarship.title}</div>
           <div style="font-size:0.82rem; color:#7a7060;">${scholarship.org}</div>
@@ -667,8 +1041,8 @@ async function renderScholarships() {
               : ""
           }
           <div class="sc-actions">
-            <a class="btn btn-gold btn-sm" href="apply.html?id=${scholarship.id}" style="flex:1;">Apply Now</a>
-            <a class="btn btn-outline btn-sm" href="detail.html">Details</a>
+            <a class="btn btn-gold btn-sm" href="apply.html?id=${scholarship.id}" onclick="trackApplyIntent('${scholarship.id}', 'fallback_grid')" style="flex:1;">Apply Now</a>
+            <a class="btn btn-outline btn-sm" href="detail.html?id=${scholarship.id}" onclick="trackDetailIntent('${scholarship.id}', 'fallback_grid')">Details</a>
           </div>
         </div>
       `
@@ -726,9 +1100,10 @@ async function renderAI() {
                       ${(scholarship.eligibleSkills || []).slice(0, 3).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
                       <span class="tag tag-red">Deadline: ${escapeHtml(formatDate(scholarship.deadline))}</span>
                     </div>
+                    ${renderEnsembleBreakdown(scholarship)}
                   </div>
                   <div>
-                    <a class="btn btn-gold btn-sm" href="apply.html?id=${encodeURIComponent(scholarship.id)}">Apply</a>
+                    <a class="btn btn-gold btn-sm" href="apply.html?id=${encodeURIComponent(scholarship.id)}" onclick="trackRecommendationIntent('${escapeHtml(scholarship.id)}', 'recommendations_page')">Apply</a>
                   </div>
                 </div>
               `
@@ -761,9 +1136,10 @@ async function renderAI() {
               ${scholarship.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}
               <span class="tag tag-red">Deadline: ${scholarship.deadline}</span>
             </div>
+            ${renderEnsembleBreakdown(scholarship)}
           </div>
           <div>
-            <a class="btn btn-gold btn-sm" href="apply.html?id=${scholarship.id}">Apply</a>
+            <a class="btn btn-gold btn-sm" href="apply.html?id=${scholarship.id}" onclick="trackRecommendationIntent('${scholarship.id}', 'recommendations_fallback')">Apply</a>
           </div>
         </div>
       `
@@ -1158,13 +1534,125 @@ async function renderApplicationsPage() {
   }
 }
 
+async function renderAdminDashboard() {
+  const api = getApi();
+  const page = document.body.dataset.page;
+  const activityFeed =
+    document.getElementById("admin-activity-feed") ||
+    document.querySelectorAll("body[data-page='admin'] .card > div[style*='font-size:0.85rem']")[0];
+  const statCards = document.querySelectorAll(".stat-card .stat-num");
+  const summary = document.querySelector("body[data-page='admin'] .text-muted");
+
+  if (!api || page !== "admin" || window.location.pathname.endsWith("admin-users.html")) {
+    return;
+  }
+
+  try {
+    const [statsResponse, usersResponse] = await Promise.all([
+      api.fetchAdminStats(),
+      api.fetchAdminUsers()
+    ]);
+
+    const stats = statsResponse.data || {};
+    const users = usersResponse.data || [];
+
+    if (statCards[0]) {
+      statCards[0].textContent = formatCompactNumber(stats.totalScholarships);
+    }
+    if (statCards[1]) {
+      statCards[1].textContent = formatCompactNumber(stats.totalUsers);
+    }
+    if (statCards[2]) {
+      statCards[2].textContent = formatCompactNumber(stats.totalApplications);
+    }
+    if (statCards[3]) {
+      statCards[3].textContent = formatCompactNumber(stats.approvedApplications);
+    }
+    if (summary) {
+      summary.textContent = "Live platform overview from your ScholarLens database.";
+    }
+
+    if (activityFeed) {
+      const recentUsers = users.slice(0, 3);
+      activityFeed.innerHTML = recentUsers.length
+        ? recentUsers
+            .map(
+              (user, index) => `
+                <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+                  <span style="background:${index === 0 ? "rgba(39,174,96,0.1)" : index === 1 ? "rgba(201,168,76,0.12)" : "rgba(52,152,219,0.1)"}; color:${index === 0 ? "#27ae60" : index === 1 ? "var(--gold)" : "#3498db"}; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.8rem;">${index === 0 ? "U" : index === 1 ? "+" : "#"}</span>
+                  <div>
+                    <p style="font-weight:600;">${escapeHtml(user.fullName || "Student joined")}</p>
+                    <p style="color:#7a7060; font-size:0.78rem;">${escapeHtml(user.degree || "Degree not set")} · ${escapeHtml(user.region || "Region not set")} · Joined ${escapeHtml(formatDate(user.createdAt))}</p>
+                  </div>
+                </div>
+              `
+            )
+            .join("")
+        : '<div style="color:#7a7060;">No user activity yet.</div>';
+    }
+  } catch (error) {
+    if (activityFeed) {
+      activityFeed.innerHTML = `<div style="color:var(--red);">${escapeHtml(error.message || "Failed to load admin dashboard.")}</div>`;
+    }
+  }
+}
+
+async function renderAdminUsersPage() {
+  const api = getApi();
+  const table = document.querySelector("body[data-page='admin'] table");
+  const heading = document.querySelector("body[data-page='admin'] h2");
+
+  if (!api || !window.location.pathname.endsWith("admin-users.html") || !table) {
+    return;
+  }
+
+  const tbody = table.querySelector("tbody");
+  if (!tbody) {
+    return;
+  }
+
+  tbody.innerHTML = '<tr><td colspan="6" style="padding:1rem;">Loading users...</td></tr>';
+
+  try {
+    const response = await api.fetchAdminUsers();
+    const users = response.data || [];
+
+    if (heading) {
+      heading.textContent = `Manage Users (${users.length})`;
+    }
+
+    tbody.innerHTML = users.length
+      ? users
+          .map(
+            (user) => `
+              <tr>
+                <td><strong>${escapeHtml(user.fullName || "Student")}</strong></td>
+                <td class="mono" style="font-size:0.82rem;">${escapeHtml(user.email)}</td>
+                <td>${escapeHtml([user.degree, user.specialisation].filter(Boolean).join(" ") || "Not set")}</td>
+                <td>${user.gpa ?? "N/A"}</td>
+                <td>${escapeHtml(String(user.applicationCount || 0))}</td>
+                <td class="mono" style="font-size:0.82rem;">${escapeHtml(formatDate(user.createdAt))}</td>
+              </tr>
+            `
+          )
+          .join("")
+      : '<tr><td colspan="6" style="padding:1rem;">No users found.</td></tr>';
+  } catch (error) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:1rem; color:var(--red);">${escapeHtml(error.message || "Failed to load users.")}</td></tr>`;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   requireRole();
   renderNav();
   renderSidebar();
   renderScholarships();
   renderAI();
+  renderDetailPage();
+  renderApplyPage();
   renderDashboardData();
+  renderAdminDashboard();
+  renderAdminUsersPage();
   renderNotificationsPage();
   renderApplicationsPage();
   renderLandingShowcase();
@@ -1174,3 +1662,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.renderNav = renderNav;
 window.renderSidebar = renderSidebar;
+window.handleSaveToggle = handleSaveToggle;
+window.trackApplyIntent = trackApplyIntent;
+window.trackDetailIntent = trackDetailIntent;
+window.trackRecommendationIntent = trackRecommendationIntent;

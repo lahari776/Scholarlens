@@ -2,6 +2,7 @@ const Application = require("../models/applicationModel");
 const Scholarship = require("../models/scholarshipModel");
 const User = require("../models/userModel");
 const Notification = require("../models/notificationModel");
+const Interaction = require("../models/interactionModel");
 
 function formatApplication(application) {
   if (!application) {
@@ -64,6 +65,16 @@ async function applyForScholarship(req, res, next) {
       title: "Application Submitted",
       message: `Your application for ${scholarship.title} has been submitted.`,
       type: "application"
+    });
+
+    await Interaction.create({
+      userId,
+      scholarshipId,
+      eventType: "apply",
+      source: "application_form",
+      metadata: {
+        statementProvided: Boolean(statement)
+      }
     });
 
     res.status(201).json({

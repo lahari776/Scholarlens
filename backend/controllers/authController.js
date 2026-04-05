@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/userModel");
+const Application = require("../models/applicationModel");
+const Scholarship = require("../models/scholarshipModel");
 
 function signToken(user) {
   return jwt.sign(
@@ -188,9 +190,62 @@ async function updateProfile(req, res, next) {
   }
 }
 
+async function listUsers(req, res, next) {
+  try {
+    const [users, applicationCounts] = await Promise.all([
+      User.find({ role: "student" }).sort({ createdAt: -1 }),
+      Application.aggregate([
+        {
+          $group: {
+            _id: "$userId",
+            count: { $sum: 1 }
+          }
+        }
+      ])
+    ]);
+
+    const countsByUserId = new Map(applicationCounts.map((item) => [String(item._id), item.count]));
+
+    res.json({
+      success: true,
+      data: users.map((user) => ({
+        ...sanitizeUser(user),
+        applicationCount: countsByUserId.get(String(user._id)) || 0
+      }))
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getAdminStats(req, res, next) {
+  try {
+    const [totalUsers, totalScholarships, totalApplications, approvedApplications] = await Promise.all([
+      User.countDocuments({ role: "student" }),
+      Scholarship.countDocuments(),
+      Application.countDocuments(),
+      Application.countDocuments({ status: "approved" })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        totalUsers,
+        totalScholarships,
+        totalApplications,
+        approvedApplications
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   signup,
   login,
   getProfile,
-  updateProfile
+  updateProfile,
+  listUsers,
+  getAdminStats
 };

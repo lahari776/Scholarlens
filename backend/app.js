@@ -6,6 +6,7 @@ const scholarshipRoutes = require("./routes/scholarshipRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const interactionRoutes = require("./routes/interactionRoutes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/scholarships", scholarshipRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/interactions", interactionRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ success: false, message: "Route not found" });

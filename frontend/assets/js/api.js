@@ -69,6 +69,17 @@ async function fetchScholarships() {
   return apiRequest("/scholarships");
 }
 
+async function fetchScholarshipById(id) {
+  return apiRequest(`/scholarships/${id}`);
+}
+
+async function trackInteraction(data) {
+  return apiRequest("/interactions", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
 async function applyForScholarship(data) {
   return apiRequest("/applications/apply", {
     method: "POST",
@@ -99,6 +110,14 @@ async function updateProfile(data) {
   });
 }
 
+async function fetchAdminUsers() {
+  return apiRequest("/auth/users");
+}
+
+async function fetchAdminStats() {
+  return apiRequest("/auth/admin/stats");
+}
+
 window.ScholarLensAPI = {
   API_BASE_URL,
   getSession: getStoredSession,
@@ -107,10 +126,14 @@ window.ScholarLensAPI = {
   signupUser,
   loginUser,
   fetchScholarships,
+  fetchScholarshipById,
+  trackInteraction,
   applyForScholarship,
   fetchUserApplications,
   fetchRecommendations,
   fetchNotifications,
   fetchProfile,
-  updateProfile
+  updateProfile,
+  fetchAdminUsers,
+  fetchAdminStats
 };
