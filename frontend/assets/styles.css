@@ -411,7 +411,7 @@ h3 {
   background: var(--gold);
 }
 
-.status-approved::before {
+.status-registered::before {
   background: #27ae60;
 }
 

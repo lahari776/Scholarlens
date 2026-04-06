@@ -220,12 +220,50 @@ async function listUsers(req, res, next) {
 
 async function getAdminStats(req, res, next) {
   try {
-    const [totalUsers, totalScholarships, totalApplications, approvedApplications] = await Promise.all([
+    const [totalUsers, totalScholarships, totalApplications, approvedApplications, registrationsPerOpportunityRaw] = await Promise.all([
       User.countDocuments({ role: "student" }),
       Scholarship.countDocuments(),
       Application.countDocuments(),
-      Application.countDocuments({ status: "approved" })
+      Application.countDocuments({ status: "approved" }),
+      Application.aggregate([
+        {
+          $group: {
+            _id: "$scholarshipId",
+            registrations: { $sum: 1 }
+          }
+        },
+        { $sort: { registrations: -1 } },
+        {
+          $lookup: {
+            from: "scholarships",
+            localField: "_id",
+            foreignField: "_id",
+            as: "scholarship"
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            scholarshipId: { $toString: "$_id" },
+            title: {
+              $ifNull: [
+                { $arrayElemAt: ["$scholarship.title", 0] },
+                "Opportunity"
+              ]
+            },
+            registrations: 1
+          }
+        }
+      ])
     ]);
+
+    const registrationsPerOpportunity = registrationsPerOpportunityRaw.map((item) => ({
+      scholarshipId: item.scholarshipId,
+      opportunityId: item.scholarshipId,
+      title: item.title,
+      opportunityTitle: item.title,
+      registrations: item.registrations
+    }));
 
     res.json({
       success: true,
@@ -233,7 +271,10 @@ async function getAdminStats(req, res, next) {
         totalUsers,
         totalScholarships,
         totalApplications,
-        approvedApplications
+        approvedApplications,
+        totalRegistrations: totalApplications,
+        registrationsPerOpportunity,
+        mostRegisteredOpportunities: registrationsPerOpportunity.slice(0, 5)
       }
     });
   } catch (error) {

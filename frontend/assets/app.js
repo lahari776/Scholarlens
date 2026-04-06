@@ -161,7 +161,7 @@ const opportunities = {
     },
     {
       title: "Higher Education Mobility Program",
-      description: "Travel and participation support for students attending approved national academic events.",
+      description: "Travel and participation support for students attending selected national academic events.",
       deadline: "08 Apr 2026",
       organizer: "Department of Education",
       benefit: "Travel grant + Fee support"
@@ -321,15 +321,8 @@ function getDaysLeft(value) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-function getStatusClass(status) {
-  const map = {
-    applied: "status-applied",
-    review: "status-review",
-    approved: "status-approved",
-    rejected: "status-rejected"
-  };
-
-  return map[status] || "status-applied";
+function getRegistrationBadgeMarkup(label = "Registered") {
+  return `<span class="status status-registered mono" style="font-size:0.78rem;">${escapeHtml(label)}</span>`;
 }
 
 function escapeHtml(value) {
@@ -580,6 +573,10 @@ async function fetchUserApplicationsById(userId) {
   return apiRequestWithSession(`/applications/user/${encodeURIComponent(userId)}`);
 }
 
+async function fetchAdminApplications() {
+  return apiRequestWithSession("/applications/admin");
+}
+
 async function markOpportunityRegistered({ userId, scholarshipId }) {
   const api = getApi();
   const payload = {
@@ -602,6 +599,48 @@ function getOpportunityLink(scholarship) {
   return scholarship?.applicationLink || scholarship?.link || scholarship?.url || scholarship?.website || null;
 }
 
+function getOpportunityId(value) {
+  if (!value) {
+    return null;
+  }
+
+  return String(value.opportunityId || value.scholarshipId || value._id || value.id);
+}
+
+function isOpportunityRegistered(applications, opportunity) {
+  const opportunityId = getOpportunityId(opportunity);
+  if (!opportunityId || !Array.isArray(applications)) {
+    return false;
+  }
+
+  return applications.some((app) => getOpportunityId(app) === opportunityId);
+}
+
+function normalizeApplicationRecord(application) {
+  return {
+    ...application,
+    opportunityId: getOpportunityId(application),
+    opportunityTitle: application?.opportunityTitle || application?.scholarshipTitle || "Opportunity",
+    scholarshipTitle: application?.scholarshipTitle || application?.opportunityTitle || "Opportunity"
+  };
+}
+
+function normalizeRegistrationNotification(notification) {
+  const title = String(notification?.title || "");
+  const message = String(notification?.message || "");
+  const hasLegacyStatusCopy = /approved|rejected|under review|application submitted|application received/i.test(`${title} ${message}`);
+
+  if (!hasLegacyStatusCopy) {
+    return notification;
+  }
+
+  return {
+    ...notification,
+    title: "Registration Update",
+    message: "Your registration activity has been recorded."
+  };
+}
+
 function setRegistrationButtonState(button, state, labelOverride = "") {
   if (!button) {
     return;
@@ -610,7 +649,7 @@ function setRegistrationButtonState(button, state, labelOverride = "") {
   const labelMap = {
     idle: "Mark as Registered",
     loading: "Saving...",
-      success: "✔ Registered",
+      success: "Registered",
     login: "Log In to Register"
   };
 
@@ -680,9 +719,9 @@ async function renderDetailPage() {
 
     const scholarship = scholarshipResponse.data;
     const recommendations = recommendationResponse.data || [];
-    const applications = applicationResponse.data || [];
+    const applications = (applicationResponse.data || []).map(normalizeApplicationRecord);
     const recommended = recommendations.find((item) => String(item.id) === String(scholarship.id)) || null;
-    const existingApplication = applications.find((item) => String(item.scholarshipId) === String(scholarship.id));
+    const isRegistered = isOpportunityRegistered(applications, scholarship);
     const daysLeft = getDaysLeft(scholarship.deadline);
     const detailLink = getOpportunityLink(scholarship);
 
@@ -784,7 +823,7 @@ async function renderDetailPage() {
         sideMetaProgress.style.display = "none";
       }
       if (sideMetaText) {
-        sideMetaText.textContent = existingApplication ? "Already registered" : "Not registered yet";
+        sideMetaText.textContent = isRegistered ? "Already registered" : "Not registered yet";
       }
     }
 
@@ -793,7 +832,11 @@ async function renderDetailPage() {
         externalLink.href = detailLink;
         externalLink.style.display = "inline-flex";
         externalLink.removeAttribute("aria-disabled");
-        externalLink.onclick = () => trackApplyIntent(scholarship.id, "detail_page");
+        externalLink.onclick = (event) => {
+          event.preventDefault();
+          trackApplyIntent(scholarship.id, "detail_page");
+          window.open(detailLink, "_blank", "noopener");
+        };
       } else {
         externalLink.href = "#";
         externalLink.setAttribute("aria-disabled", "true");
@@ -811,8 +854,8 @@ async function renderDetailPage() {
     }
 
     if (registerButton) {
-      if (existingApplication) {
-        setRegistrationButtonState(registerButton, "success", "✔ Registered");
+      if (isRegistered) {
+        setRegistrationButtonState(registerButton, "success", "Registered");
       } else {
         setRegistrationButtonState(registerButton, "idle");
         registerButton.onclick = async () => {
@@ -823,7 +866,7 @@ async function renderDetailPage() {
               userId: session.userId,
               scholarshipId: scholarship.id
             });
-            setRegistrationButtonState(registerButton, "success", "✔ Registered");
+            setRegistrationButtonState(registerButton, "success", "Registered");
             if (sideMetaLabel) {
               sideMetaLabel.textContent = "Registration Status";
             }
@@ -833,9 +876,10 @@ async function renderDetailPage() {
             if (sideMetaText) {
               sideMetaText.textContent = "Already registered";
             }
+            alert("Marked as Registered");
           } catch (error) {
             if (error.status === 409) {
-              setRegistrationButtonState(registerButton, "success", "✔ Registered");
+              setRegistrationButtonState(registerButton, "success", "Registered");
               if (sideMetaLabel) {
                 sideMetaLabel.textContent = "Registration Status";
               }
@@ -1282,7 +1326,7 @@ function createBrowseOpportunityCard(item, session, matchScore = null) {
       ${session.loggedIn && session.role === "student" && score !== null ? `<div class="progress-bar" style="margin-top:0.25rem;"><div class="progress-fill" style="width:${score}%"></div></div>` : ""}
       <p style="font-size:0.84rem; color:#4a4035; margin-top:0.85rem;">${escapeHtml(item.description)}</p>
       <div class="sc-actions">
-        <a class="btn btn-gold btn-sm" href="${detailHref}" style="flex:1;">Apply Now</a>
+        <a class="btn btn-gold btn-sm" href="${detailHref}" style="flex:1;">View Details</a>
       </div>
     </div>
   `;
@@ -1440,7 +1484,7 @@ async function renderAI() {
                     ${renderEnsembleBreakdown(scholarship)}
                   </div>
                   <div>
-                    <a class="btn btn-gold btn-sm" href="detail.html?id=${encodeURIComponent(scholarship.id)}" onclick="trackRecommendationIntent('${escapeHtml(scholarship.id)}', 'recommendations_page')">Apply</a>
+                    <a class="btn btn-gold btn-sm" href="detail.html?id=${encodeURIComponent(scholarship.id)}" onclick="trackRecommendationIntent('${escapeHtml(scholarship.id)}', 'recommendations_page')">View Details</a>
                   </div>
                 </div>
               `
@@ -1476,7 +1520,7 @@ async function renderAI() {
             ${renderEnsembleBreakdown(scholarship)}
           </div>
           <div>
-            <a class="btn btn-gold btn-sm" href="detail.html?id=${scholarship.id}" onclick="trackRecommendationIntent('${scholarship.id}', 'recommendations_fallback')">Apply</a>
+            <a class="btn btn-gold btn-sm" href="detail.html?id=${scholarship.id}" onclick="trackRecommendationIntent('${scholarship.id}', 'recommendations_fallback')">View Details</a>
           </div>
         </div>
       `
@@ -1950,47 +1994,17 @@ function bindUploadZone() {
 }
 
 async function submitApp(button) {
-  if (!button) {
-    return;
+  if (button) {
+    button.disabled = true;
   }
 
-  const api = getApi();
-  const session = getSession();
   const scholarshipId = new URLSearchParams(window.location.search).get("id");
-  const statement = document.getElementById("application-statement")?.value.trim() || "";
-
-  if (!api) {
-    alert("API helper is not loaded.");
-    return;
-  }
-
-  if (!session.userId) {
-    alert("Please login before applying.");
-    window.location.href = "login.html";
-    return;
-  }
-
   if (!scholarshipId) {
-    alert("Scholarship ID is missing.");
+    window.location.href = "scholarships.html";
     return;
   }
 
-  button.textContent = "Submitting...";
-  button.disabled = true;
-
-  try {
-    await api.applyForScholarship({
-      userId: session.userId,
-      scholarshipId,
-      statement
-    });
-    alert("Application submitted successfully. You can track it in My Applications.");
-    window.location.href = "applications.html";
-  } catch (error) {
-    alert(error.message || "Failed to submit application.");
-    button.textContent = "Submit Application";
-    button.disabled = false;
-  }
+  window.location.href = `detail.html?id=${encodeURIComponent(scholarshipId)}`;
 }
 
 async function renderDashboardData() {
@@ -2012,8 +2026,8 @@ async function renderDashboardData() {
     const user = getCurrentUser();
     const scholarshipsData = scholarshipResponse.data || [];
     const dashboardItems = scholarshipsData.map(normalizeDashboardScholarship).filter(Boolean);
-    const applications = applicationResponse.data || [];
-    const notifications = notificationResponse.data || [];
+    const applications = (applicationResponse.data || []).map(normalizeApplicationRecord);
+    const notifications = (notificationResponse.data || []).map(normalizeRegistrationNotification);
     const recommendations = recommendationResponse.data || [];
 
     const welcome = document.getElementById("dashboard-welcome");
@@ -2026,7 +2040,7 @@ async function renderDashboardData() {
     }
 
     if (summary) {
-      summary.textContent = `You have ${applications.length} applications and ${notifications.length} notifications right now.`;
+      summary.textContent = `You have ${applications.length} registered opportunities and ${notifications.length} notifications right now.`;
     }
 
     if (notificationSummary) {
@@ -2061,15 +2075,15 @@ async function renderDashboardData() {
               (application) => `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:#faf7f1; border-radius:4px;">
                   <div>
-                    <p style="font-size:0.88rem; font-weight:600;">${escapeHtml(application.scholarshipTitle || "Scholarship Application")}</p>
-                    <p style="font-size:0.78rem; color:#7a7060;">Applied on ${escapeHtml(formatDate(application.submittedAt))}</p>
+                    <p style="font-size:0.88rem; font-weight:600;">${escapeHtml(application.opportunityTitle || "Registered Opportunity")}</p>
+                    <p style="font-size:0.78rem; color:#7a7060;">Registered on ${escapeHtml(formatDate(application.submittedAt))}</p>
                   </div>
-                  <span class="status ${getStatusClass(application.status)} mono" style="font-size:0.75rem;">${escapeHtml(application.status)}</span>
+                  ${getRegistrationBadgeMarkup()}
                 </div>
               `
             )
             .join("")
-        : '<div style="padding:0.75rem; background:#faf7f1; border-radius:4px;">No applications yet. Browse scholarships to get started.</div>';
+        : '<div style="padding:0.75rem; background:#faf7f1; border-radius:4px;">No registrations yet. Browse scholarships to get started.</div>';
     }
 
     renderDashboardScholarshipSections(dashboardItems);
@@ -2090,7 +2104,7 @@ async function renderNotificationsPage() {
 
   try {
     const response = await api.fetchNotifications(session.userId);
-    const notifications = response.data || [];
+    const notifications = (response.data || []).map(normalizeRegistrationNotification);
 
     list.innerHTML = notifications.length
       ? notifications
@@ -2124,23 +2138,30 @@ async function renderApplicationsPage() {
 
   try {
     const response = await api.fetchUserApplications(session.userId);
-    const applications = response.data || [];
+    const applications = (response.data || []).map(normalizeApplicationRecord);
+    const summary = document.getElementById("applications-summary");
+
+    if (summary) {
+      summary.textContent = applications.length
+        ? `${applications.length} registered opportunit${applications.length === 1 ? "y" : "ies"}`
+        : "No registrations yet.";
+    }
 
     tbody.innerHTML = applications.length
       ? applications
           .map(
             (application) => `
               <tr>
-                <td><strong>${escapeHtml(application.scholarshipTitle || "Scholarship Application")}</strong><br><span style="font-size:0.78rem;color:#7a7060;">Deadline ${escapeHtml(formatDate(application.deadline))}</span></td>
-                <td class="mono">Funding</td>
+                <td><strong>${escapeHtml(application.opportunityTitle || "Registered Opportunity")}</strong></td>
+                <td class="mono" style="font-size:0.82rem;">${escapeHtml(formatDate(application.deadline))}</td>
                 <td class="mono" style="font-size:0.82rem;">${escapeHtml(formatDate(application.submittedAt))}</td>
-                <td><span class="status ${getStatusClass(application.status)} mono" style="font-size:0.78rem;">${escapeHtml(application.status)}</span></td>
-                <td><a class="btn btn-sm btn-outline" href="detail.html">View</a></td>
+                <td>${getRegistrationBadgeMarkup()}</td>
+                <td><a class="btn btn-sm btn-outline" href="detail.html?id=${encodeURIComponent(application.opportunityId || application.scholarshipId || application.id)}">View</a></td>
               </tr>
             `
           )
           .join("")
-      : '<tr><td colspan="5" style="padding:1rem;">No applications yet.</td></tr>';
+      : '<tr><td colspan="5" style="padding:1rem;">No registrations yet.</td></tr>';
   } catch (error) {
     alert(error.message || "Failed to load applications.");
   }
@@ -2175,37 +2196,73 @@ async function renderAdminDashboard() {
       statCards[1].textContent = formatCompactNumber(stats.totalUsers);
     }
     if (statCards[2]) {
-      statCards[2].textContent = formatCompactNumber(stats.totalApplications);
+      statCards[2].textContent = formatCompactNumber(stats.totalRegistrations ?? stats.totalApplications);
     }
     if (statCards[3]) {
-      statCards[3].textContent = formatCompactNumber(stats.approvedApplications);
+      statCards[3].textContent = formatCompactNumber(stats.mostRegisteredOpportunities?.[0]?.registrations || 0);
     }
     if (summary) {
-      summary.textContent = "Live platform overview from your ScholarLens database.";
+      summary.textContent = "Live registration overview from your ScholarLens database.";
     }
 
     if (activityFeed) {
-      const recentUsers = users.slice(0, 3);
-      activityFeed.innerHTML = recentUsers.length
-        ? recentUsers
+      const topRegistrations = (stats.mostRegisteredOpportunities || []).slice(0, 3);
+      activityFeed.innerHTML = topRegistrations.length
+        ? topRegistrations
             .map(
-              (user, index) => `
+              (item, index) => `
                 <div style="display:flex; gap:0.75rem; align-items:flex-start;">
-                  <span style="background:${index === 0 ? "rgba(39,174,96,0.1)" : index === 1 ? "rgba(201,168,76,0.12)" : "rgba(52,152,219,0.1)"}; color:${index === 0 ? "#27ae60" : index === 1 ? "var(--gold)" : "#3498db"}; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.8rem;">${index === 0 ? "U" : index === 1 ? "+" : "#"}</span>
+                  <span style="background:${index === 0 ? "rgba(39,174,96,0.1)" : index === 1 ? "rgba(201,168,76,0.12)" : "rgba(52,152,219,0.1)"}; color:${index === 0 ? "#27ae60" : index === 1 ? "var(--gold)" : "#3498db"}; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.8rem;">${index + 1}</span>
                   <div>
-                    <p style="font-weight:600;">${escapeHtml(user.fullName || "Student joined")}</p>
-                    <p style="color:#7a7060; font-size:0.78rem;">${escapeHtml(user.degree || "Degree not set")} | ${escapeHtml(user.region || "Region not set")} | Joined ${escapeHtml(formatDate(user.createdAt))}</p>
+                    <p style="font-weight:600;">${escapeHtml(item.opportunityTitle || "Opportunity")}</p>
+                    <p style="color:#7a7060; font-size:0.78rem;">${escapeHtml(String(item.registrations || 0))} registrations</p>
                   </div>
                 </div>
               `
             )
             .join("")
-        : '<div style="color:#7a7060;">No user activity yet.</div>';
+        : '<div style="color:#7a7060;">No registration activity yet.</div>';
     }
   } catch (error) {
     if (activityFeed) {
       activityFeed.innerHTML = `<div style="color:var(--red);">${escapeHtml(error.message || "Failed to load admin dashboard.")}</div>`;
     }
+  }
+}
+
+async function renderAdminApplicationsPage() {
+  const api = getApi();
+  const heading = document.getElementById("admin-applications-heading");
+  const tbody = document.getElementById("admin-applications-table-body");
+
+  if (!api || !tbody || !window.location.pathname.endsWith("admin-applications.html")) {
+    return;
+  }
+
+  try {
+    const response = await fetchAdminApplications();
+    const applications = (response.data || []).map(normalizeApplicationRecord);
+
+    if (heading) {
+      heading.textContent = `Manage Registrations (${applications.length})`;
+    }
+
+    tbody.innerHTML = applications.length
+      ? applications
+          .map(
+            (application) => `
+              <tr>
+                <td><strong>${escapeHtml(application.userName || "Student")}</strong><br><span style="font-size:0.78rem;color:#7a7060;">${escapeHtml(application.userEmail || application.userId)}</span></td>
+                <td>${escapeHtml(application.opportunityTitle || "Opportunity")}</td>
+                <td class="mono" style="font-size:0.82rem;">${escapeHtml(formatDate(application.submittedAt))}</td>
+                <td>${getRegistrationBadgeMarkup()}</td>
+              </tr>
+            `
+          )
+          .join("")
+      : '<tr><td colspan="4" style="padding:1rem;">No registrations yet.</td></tr>';
+  } catch (error) {
+    tbody.innerHTML = `<tr><td colspan="4" style="padding:1rem; color:var(--red);">${escapeHtml(error.message || "Failed to load registrations.")}</td></tr>`;
   }
 }
 
@@ -2489,7 +2546,7 @@ async function handleAdminScholarshipSave() {
   const title = titleInput.value.trim();
   const description = descriptionInput.value.trim();
   const provider = providerInput?.value.trim() || null;
-  const amount = amountInput?.value ? `₹${Number(amountInput.value).toLocaleString("en-IN")}` : null;
+  const amount = amountInput?.value ? `Rs ${Number(amountInput.value).toLocaleString("en-IN")}` : null;
   const deadline = deadlineInput.value;
   const degree = degreeInput?.value || null;
   const eligibility = eligibilityInput?.value.trim() || null;
@@ -2564,6 +2621,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderApplyPage();
   renderDashboardData();
   renderAdminDashboard();
+  renderAdminApplicationsPage();
   renderAdminUsersPage();
   renderAdminScholarshipsPage();
   renderNotificationsPage();

@@ -39,7 +39,7 @@ const homeOpportunities = {
     },
     {
       title: "Higher Education Mobility Program",
-      description: "Travel and participation support for students attending approved national academic events.",
+      description: "Travel and participation support for students attending selected national academic events.",
       deadline: "08 Apr 2026",
       organizer: "Department of Education",
       benefit: "Travel grant + Fee support"

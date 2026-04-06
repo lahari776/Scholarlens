@@ -16,11 +16,15 @@ function formatApplication(application) {
     id: String(source._id || source.id),
     userId: String(source.userId?._id || source.userId),
     scholarshipId: String(scholarship?._id || source.scholarshipId),
+    opportunityId: String(scholarship?._id || source.scholarshipId),
     status: source.status,
     statement: source.statement || null,
     submittedAt: source.submittedAt,
     scholarshipTitle: scholarship?.title || source.scholarshipTitle,
-    deadline: scholarship?.deadline || source.deadline
+    opportunityTitle: scholarship?.title || source.scholarshipTitle,
+    deadline: scholarship?.deadline || source.deadline,
+    userName: source.userId?.name || source.userName || null,
+    userEmail: source.userId?.email || source.userEmail || null
   };
 }
 
@@ -99,7 +103,21 @@ async function getApplicationsByUser(req, res, next) {
   }
 }
 
+async function getAllApplications(req, res, next) {
+  try {
+    const applications = await Application.find({})
+      .populate("userId", "name email")
+      .populate("scholarshipId", "title deadline")
+      .sort({ submittedAt: -1 });
+
+    res.json({ success: true, data: applications.map(formatApplication) });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   applyForScholarship,
-  getApplicationsByUser
+  getApplicationsByUser,
+  getAllApplications
 };
