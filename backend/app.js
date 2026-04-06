@@ -10,12 +10,22 @@ const interactionRoutes = require("./routes/interactionRoutes");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || "*",
-    credentials: true
-  })
-);
+const isProduction = process.env.NODE_ENV === "production";
+const configuredOrigin = process.env.CORS_ORIGIN;
+
+const shouldReflectOrigin = !configuredOrigin || configuredOrigin === "*";
+
+const corsOptions = shouldReflectOrigin
+  ? {
+      origin: isProduction ? false : true,
+      credentials: true
+    }
+  : {
+      origin: configuredOrigin,
+      credentials: true
+    };
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -43,3 +53,5 @@ app.use((error, req, res, next) => {
 });
 
 module.exports = app;
+
+

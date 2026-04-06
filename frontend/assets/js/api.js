@@ -1,4 +1,34 @@
-const API_BASE_URL = "http://localhost:5000/api";
+function normalizeApiBaseUrl(value) {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = String(value).trim().replace(/\/+$/, "");
+  if (!trimmed) {
+    return null;
+  }
+
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+}
+
+function getDefaultApiBaseUrl() {
+  const host = window.location.hostname || "localhost";
+  const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+  return `${protocol}//${host}:5000/api`;
+}
+
+function resolveApiBaseUrl() {
+  const fromGlobal =
+    window.SCHOLARLENS_API_BASE_URL ||
+    window.__SCHOLARLENS_CONFIG__?.API_BASE_URL ||
+    window.REACT_APP_API_URL ||
+    window.VITE_API_BASE_URL;
+  const fromStorage = localStorage.getItem("SCHOLARLENS_API_BASE_URL");
+
+  return normalizeApiBaseUrl(fromGlobal) || normalizeApiBaseUrl(fromStorage) || getDefaultApiBaseUrl();
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 const SESSION_STORAGE_KEY = "scholarlens-session";
 
 function getStoredSession() {
@@ -160,3 +190,5 @@ window.ScholarLensAPI = {
   fetchAdminUsers,
   fetchAdminStats
 };
+
+

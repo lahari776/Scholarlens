@@ -287,7 +287,25 @@ function getApi() {
 }
 
 function getApiBaseUrl() {
-  return getApi()?.API_BASE_URL || "http://localhost:5000/api";
+  const api = getApi();
+  if (api?.API_BASE_URL) {
+    return api.API_BASE_URL;
+  }
+
+  const fromGlobal =
+    window.SCHOLARLENS_API_BASE_URL ||
+    window.__SCHOLARLENS_CONFIG__?.API_BASE_URL ||
+    window.REACT_APP_API_URL ||
+    window.VITE_API_BASE_URL;
+
+  if (fromGlobal) {
+    const trimmed = String(fromGlobal).trim().replace(/\/+$/, "");
+    return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+  }
+
+  const host = window.location.hostname || "localhost";
+  const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+  return `${protocol}//${host}:5000/api`;
 }
 
 function getCurrentUser() {
@@ -2637,3 +2655,4 @@ window.handleSaveToggle = handleSaveToggle;
 window.trackApplyIntent = trackApplyIntent;
 window.trackDetailIntent = trackDetailIntent;
 window.trackRecommendationIntent = trackRecommendationIntent;
+
