@@ -3,12 +3,141 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Scholarships - ScholarLens</title>
+  <title>Manage Opportunities - ScholarLens</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/styles.css">
   <link rel="stylesheet" href="assets/theme.css">
+  <style>
+    .admin-form-section {
+      border: 1px solid #e4d8c1;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(180deg, rgba(255, 250, 242, 0.95), rgba(248, 242, 231, 0.9));
+    }
+
+    .admin-form-section-header {
+      margin-bottom: 1rem;
+    }
+
+    .admin-form-section-header h4 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+
+    .admin-form-section-header .label {
+      margin-bottom: 0.25rem;
+    }
+
+    .admin-checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .admin-checkbox-card {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.7rem 0.8rem;
+      border: 1px solid #d9ccb3;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--ink);
+      font-size: 0.88rem;
+    }
+
+    .admin-checkbox-card input {
+      accent-color: var(--gold);
+    }
+
+    .admin-toggle-row {
+      align-items: end;
+    }
+
+    .admin-inline-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .admin-inline-toggle .form-label {
+      margin-bottom: 0;
+    }
+
+    .admin-switch {
+      position: relative;
+      display: inline-flex;
+      width: 52px;
+      height: 30px;
+      flex-shrink: 0;
+    }
+
+    .admin-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .admin-switch-slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #d6c7ad;
+      transition: background 0.2s ease;
+    }
+
+    .admin-switch-slider::before {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      left: 4px;
+      top: 4px;
+      border-radius: 50%;
+      background: #fffdf9;
+      box-shadow: 0 2px 6px rgba(35, 35, 35, 0.18);
+      transition: transform 0.2s ease;
+    }
+
+    .admin-switch input:checked + .admin-switch-slider {
+      background: var(--gold);
+    }
+
+    .admin-switch input:checked + .admin-switch-slider::before {
+      transform: translateX(22px);
+    }
+
+    .admin-dynamic-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .admin-dynamic-empty {
+      margin: 0;
+      padding: 0.9rem 1rem;
+      border: 1px dashed #d6c7ad;
+      border-radius: 6px;
+      color: #6f644f;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    @media (max-width: 900px) {
+      .admin-inline-toggle {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .admin-dynamic-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body data-page="admin" data-auth="admin">
   <div id="site-nav"></div>
@@ -16,27 +145,116 @@
     <aside data-sidebar="admin" data-active="admin-scholarships"></aside>
     <main class="main-content">
       <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.5rem;">
-        <div><p class="label">Admin</p><h2>Manage Scholarships</h2></div>
-        <button class="btn btn-gold" type="button" onclick="toggleAdminForm()">Add Scholarship</button>
+        <div><p class="label">Admin</p><h2>Manage Opportunities</h2></div>
+        <button class="btn btn-gold" type="button" onclick="toggleAdminForm()">Add Opportunity</button>
       </div>
       <div id="admin-add-form" class="card" style="display:none; margin-bottom:1.5rem; border-left:4px solid var(--gold);">
-        <h3 id="admin-scholarship-form-title" style="margin-bottom:1.25rem;">Add New Scholarship</h3>
+        <h3 id="admin-scholarship-form-title" style="margin-bottom:1.25rem;">Add New Opportunity</h3>
         <input id="admin-scholarship-id" type="hidden" value="">
         <div id="admin-scholarship-feedback" style="margin-bottom:1rem; color:var(--red); font-size:0.95rem;"></div>
-        <div class="form-group"><label class="form-label">Title</label><input id="admin-scholarship-title" type="text" class="form-input" placeholder="Scholarship name"></div>
-        <div class="form-group"><label class="form-label">Description</label><textarea id="admin-scholarship-description" class="form-textarea" placeholder="Describe the scholarship..."></textarea></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Provider</label><input id="admin-scholarship-provider" type="text" class="form-input" placeholder="Provider name"></div>
-          <div class="form-group"><label class="form-label">Amount (&#8377;)</label><input id="admin-scholarship-amount" type="number" class="form-input" placeholder="50000"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Deadline</label><input id="admin-scholarship-deadline" type="date" class="form-input"></div>
-          <div class="form-group"><label class="form-label">Eligible Degree</label><select id="admin-scholarship-degree" class="form-select"><option value="All">All</option><option value="B.Tech">B.Tech</option><option value="B.Sc">B.Sc</option><option value="MBA">MBA</option></select></div>
-        </div>
-        <div class="form-group"><label class="form-label">Eligibility</label><input id="admin-scholarship-eligibility" type="text" class="form-input" placeholder="Example: Students with minimum 7.0 GPA"></div>
-        <div style="display:flex; gap:1rem; justify-content:flex-end;">
+
+        <section class="admin-form-section">
+          <div class="admin-form-section-header">
+            <p class="label">Basic Information</p>
+            <h4>Core opportunity details</h4>
+          </div>
+          <div class="form-group"><label class="form-label" for="admin-scholarship-title">Title</label><input id="admin-scholarship-title" type="text" class="form-input" placeholder="Opportunity title"></div>
+          <div class="form-group"><label class="form-label" for="admin-scholarship-description">Description</label><textarea id="admin-scholarship-description" class="form-textarea" placeholder="Describe the opportunity..."></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="admin-scholarship-category">Category</label><select id="admin-scholarship-category" class="form-select"></select></div>
+            <div class="form-group"><label class="form-label" for="admin-scholarship-provider">Provider</label><input id="admin-scholarship-provider" type="text" class="form-input" placeholder="Provider or organizer"></div>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <div class="admin-form-section-header">
+            <p class="label">Links</p>
+            <h4>Where students can verify and apply</h4>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="admin-scholarship-application-link">Application Link</label><input id="admin-scholarship-application-link" type="url" class="form-input" placeholder="https://example.com/apply"></div>
+            <div class="form-group"><label class="form-label" for="admin-scholarship-official-website">Official Website</label><input id="admin-scholarship-official-website" type="url" class="form-input" placeholder="https://example.com"></div>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <div class="admin-form-section-header">
+            <p class="label">Opportunity Details</p>
+            <h4>Format and timing</h4>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="admin-scholarship-deadline">Deadline</label><input id="admin-scholarship-deadline" type="date" class="form-input"></div>
+            <div class="form-group"><label class="form-label" for="admin-scholarship-mode">Mode</label><select id="admin-scholarship-mode" class="form-select"></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label" for="admin-scholarship-degree">Eligible Degree</label><select id="admin-scholarship-degree" class="form-select"></select></div>
+            <div class="form-group"><label class="form-label" for="admin-scholarship-eligibility">Eligibility Summary</label><input id="admin-scholarship-eligibility" type="text" class="form-input" placeholder="Example: Students with minimum 7.0 GPA"></div>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <div class="admin-form-section-header">
+            <p class="label">Eligibility</p>
+            <h4>B.Tech focused filters</h4>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Branches</label>
+            <div id="admin-eligibility-branches" class="admin-checkbox-grid"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year</label>
+            <div id="admin-eligibility-years" class="admin-checkbox-grid"></div>
+          </div>
+          <div class="form-row admin-toggle-row">
+            <div class="form-group admin-inline-toggle">
+              <label class="form-label" for="admin-scholarship-cgpa-required">CGPA Required</label>
+              <label class="admin-switch">
+                <input id="admin-scholarship-cgpa-required" type="checkbox">
+                <span class="admin-switch-slider"></span>
+              </label>
+            </div>
+            <div id="admin-scholarship-min-cgpa-wrap" class="form-group">
+              <label class="form-label" for="admin-scholarship-min-cgpa">Minimum CGPA</label>
+              <input id="admin-scholarship-min-cgpa" type="number" min="0" max="10" step="0.1" class="form-input" placeholder="7.5">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-scholarship-backlogs">Backlogs Allowed</label>
+            <select id="admin-scholarship-backlogs" class="form-select">
+              <option value="">Select</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <div class="admin-form-section-header">
+            <p class="label">Tags</p>
+            <h4>Helpful for filtering and recommendations</h4>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Domain Tags</label>
+            <div id="admin-domain-tags" class="admin-checkbox-grid"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Additional Tags</label>
+            <div id="admin-additional-tags" class="admin-checkbox-grid"></div>
+          </div>
+        </section>
+
+        <section class="admin-form-section">
+          <div class="admin-form-section-header">
+            <p class="label">Category Details</p>
+            <h4>Fields that change with the selected category</h4>
+          </div>
+          <div id="admin-scholarship-dynamic-fields"></div>
+        </section>
+
+        <div style="display:flex; gap:1rem; justify-content:flex-end; flex-wrap:wrap;">
+          <button class="btn btn-outline" type="button" onclick="resetAdminScholarshipForm()">Reset</button>
           <button class="btn btn-outline" type="button" onclick="toggleAdminForm()">Cancel</button>
-          <button id="admin-scholarship-save" class="btn btn-gold" type="button" onclick="handleAdminScholarshipSave()">Save Scholarship</button>
+          <button id="admin-scholarship-save" class="btn btn-gold" type="button" onclick="handleAdminScholarshipSave()">Save Opportunity</button>
         </div>
       </div>
       <div class="card" style="padding:0; overflow:hidden;">
@@ -52,5 +270,6 @@
   <script src="assets/js/auth.js"></script>
   <script src="assets/js/api.js"></script>
   <script src="assets/app.js"></script>
+  <script src="admin-opportunity-form.js"></script>
 </body>
 </html>

@@ -33,6 +33,10 @@ const scholarshipSchema = new mongoose.Schema(
       default: null
     },
     eligibility: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
+    },
+    eligibilitySummary: {
       type: String,
       trim: true,
       default: null
@@ -46,6 +50,35 @@ const scholarshipSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: null
+    },
+    applicationLink: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    officialWebsite: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    mode: {
+      type: String,
+      trim: true,
+      default: null
+    },
+    tags: {
+      domain: {
+        type: [String],
+        default: []
+      },
+      additional: {
+        type: [String],
+        default: []
+      }
+    },
+    extraDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     },
     eligibleSkills: {
       type: [String],
