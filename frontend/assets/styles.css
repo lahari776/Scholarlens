@@ -985,6 +985,8 @@ tbody td {
   border-radius: 18px;
   background: #f7fbff;
   border: 1px solid rgba(16, 34, 54, 0.06);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .hero-stat-card strong {
@@ -997,8 +999,31 @@ tbody td {
 .hero-stat-card span {
   color: #647082;
   font-size: 0.9rem;
+  line-height: 1.35;
 }
 
+.hero-stat-card.dashboard-card {
+  min-width: 0;
+  max-width: 100%;
+  text-align: center;
+  padding: 1rem 0.7rem 1.1rem;
+}
+
+.hero-stat-card.dashboard-card span {
+  display: block;
+  white-space: nowrap;
+  word-wrap: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  font-size: 0.82rem;
+}
+
+.hero-stat-card.dashboard-card strong {
+  white-space: nowrap;
+  word-break: normal;
+  font-size: 1.12rem;
+  line-height: 1.2;
+}
 .hero-orb {
   position: absolute;
   border-radius: 50%;
@@ -1574,3 +1599,4 @@ tbody td {
   color: var(--gold);
   border-color: rgba(201, 168, 76, 0.45);
 }
+
