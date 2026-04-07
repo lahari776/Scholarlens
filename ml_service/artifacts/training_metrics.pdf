@@ -9,7 +9,7 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
 endobj
 4 0 obj
-<< /Length 2247 >>
+<< /Length 2246 >>
 stream
 BT
 /F1 12 Tf
@@ -28,7 +28,7 @@ BT
 /F1 11 Tf
 1 0 0 1 50 664 Tm (sklearnEnabled: True) Tj
 /F1 11 Tf
-1 0 0 1 50 648 Tm (xgboostEnabled: False) Tj
+1 0 0 1 50 648 Tm (xgboostEnabled: True) Tj
 /F1 11 Tf
 1 0 0 1 50 632 Tm (classifierEnsembleTrained: True) Tj
 /F1 11 Tf
@@ -44,11 +44,11 @@ BT
 /F1 11 Tf
 1 0 0 1 50 536 Tm (evaluation.structuredModel:) Tj
 /F1 11 Tf
-1 0 0 1 50 520 Tm (evaluation.structuredModel.mae: 0.2049) Tj
+1 0 0 1 50 520 Tm (evaluation.structuredModel.mae: 0.2044) Tj
 /F1 11 Tf
-1 0 0 1 50 504 Tm (evaluation.structuredModel.rmse: 0.2615) Tj
+1 0 0 1 50 504 Tm (evaluation.structuredModel.rmse: 0.2614) Tj
 /F1 11 Tf
-1 0 0 1 50 488 Tm (evaluation.structuredModel.r2: 0.4133) Tj
+1 0 0 1 50 488 Tm (evaluation.structuredModel.r2: 0.4141) Tj
 /F1 11 Tf
 1 0 0 1 50 472 Tm (evaluation.metaModel:) Tj
 /F1 11 Tf
@@ -70,7 +70,7 @@ BT
 /F1 11 Tf
 1 0 0 1 50 328 Tm (classifierEvaluation.f1: 0.7619) Tj
 /F1 11 Tf
-1 0 0 1 50 312 Tm (classifierEvaluation.avgPositiveProbability: 0.4452) Tj
+1 0 0 1 50 312 Tm (classifierEvaluation.avgPositiveProbability: 0.4439) Tj
 /F1 11 Tf
 1 0 0 1 50 296 Tm (classifierEvaluation.testSize: 255) Tj
 /F1 11 Tf
@@ -96,9 +96,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000241 00000 n 
-0000002540 00000 n 
+0000002539 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-2610
+2609
 %%EOF
