@@ -617,12 +617,61 @@ function getOpportunityLink(scholarship) {
   return scholarship?.applicationLink || scholarship?.link || scholarship?.url || scholarship?.website || null;
 }
 
+function getGoogleSearchUrl(item) {
+  const query = [
+    item?.title,
+    item?.provider || item?.organizer || item?.org,
+    item?.category,
+    item?.degree,
+    item?.region,
+    inferOpportunityType(item)
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return `https://www.google.com/search?q=${encodeURIComponent(query || "scholarship details")}`;
+}
+
+function getViewDetailsHref(item) {
+  const opportunityId = getOpportunityId(item);
+  if (opportunityId) {
+    return { href: `detail.html?id=${encodeURIComponent(opportunityId)}`, external: false };
+  }
+
+  const directLink = getOpportunityLink(item);
+  if (directLink) {
+    return { href: directLink, external: true };
+  }
+
+  return { href: getGoogleSearchUrl(item), external: true };
+}
+
+function getViewDetailsAttributes(item, source) {
+  const detail = getViewDetailsHref(item);
+  const opportunityId = getOpportunityId(item);
+  const tracking = detail.external || !opportunityId
+    ? ""
+    : ` onclick="trackDetailIntent('${escapeHtml(opportunityId)}', '${escapeHtml(source)}')"`;
+  const externalAttributes = detail.external ? ' target="_blank" rel="noopener noreferrer"' : "";
+  return `href="${detail.href}"${externalAttributes}${tracking}`;
+}
+
 function getOpportunityId(value) {
   if (!value) {
     return null;
   }
 
-  return String(value.opportunityId || value.scholarshipId || value._id || value.id);
+  const rawId = value.opportunityId || value.scholarshipId || value._id || value.id;
+  if (rawId === undefined || rawId === null) {
+    return null;
+  }
+
+  const normalizedId = String(rawId).trim();
+  if (!normalizedId || normalizedId === "undefined" || normalizedId === "null") {
+    return null;
+  }
+
+  return normalizedId;
 }
 
 function isOpportunityRegistered(applications, opportunity) {
@@ -742,6 +791,7 @@ async function renderDetailPage() {
     const isRegistered = isOpportunityRegistered(applications, scholarship);
     const daysLeft = getDaysLeft(scholarship.deadline);
     const detailLink = getOpportunityLink(scholarship);
+    const fallbackSearchLink = getGoogleSearchUrl(scholarship);
 
     document.title = `${scholarship.title} - ScholarLens`;
 
@@ -774,7 +824,7 @@ async function renderDetailPage() {
         `Funding or benefit: ${scholarship.fundingAmount || scholarship.funding || "Funding available"}`,
         scholarship.region ? `Region: ${scholarship.region}` : null,
         scholarship.degree ? `Degree: ${scholarship.degree}` : null,
-        detailLink ? `Application link: ${detailLink}` : "Application link not available"
+        detailLink ? `Application link: ${detailLink}` : "Official link not available. Google search fallback is enabled."
       ].filter(Boolean);
       keyList.innerHTML = keyItems.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
     }
@@ -848,6 +898,7 @@ async function renderDetailPage() {
     if (externalLink) {
       if (detailLink) {
         externalLink.href = detailLink;
+        externalLink.textContent = "Apply Now";
         externalLink.style.display = "inline-flex";
         externalLink.removeAttribute("aria-disabled");
         externalLink.onclick = (event) => {
@@ -856,9 +907,13 @@ async function renderDetailPage() {
           window.open(detailLink, "_blank", "noopener");
         };
       } else {
-        externalLink.href = "#";
-        externalLink.setAttribute("aria-disabled", "true");
-        externalLink.onclick = (event) => event.preventDefault();
+        externalLink.href = fallbackSearchLink;
+        externalLink.textContent = "Search on Google";
+        externalLink.removeAttribute("aria-disabled");
+        externalLink.onclick = (event) => {
+          event.preventDefault();
+          window.open(fallbackSearchLink, "_blank", "noopener");
+        };
       }
     }
 
@@ -1322,7 +1377,7 @@ function normalizeBrowseOpportunity(item) {
 function createBrowseOpportunityCard(item, session, matchScore = null) {
   const daysLeft = getDaysLeft(item.deadline);
   const score = typeof matchScore === "number" ? matchScore : null;
-  const detailHref = `detail.html?id=${encodeURIComponent(item.id)}`;
+  const detailAttrs = getViewDetailsAttributes(item, "browse_grid");
 
   return `
     <div class="scholarship-card">
@@ -1344,7 +1399,7 @@ function createBrowseOpportunityCard(item, session, matchScore = null) {
       ${session.loggedIn && session.role === "student" && score !== null ? `<div class="progress-bar" style="margin-top:0.25rem;"><div class="progress-fill" style="width:${score}%"></div></div>` : ""}
       <p style="font-size:0.84rem; color:#4a4035; margin-top:0.85rem;">${escapeHtml(item.description)}</p>
       <div class="sc-actions">
-        <a class="btn btn-gold btn-sm" href="${detailHref}" style="flex:1;">View Details</a>
+        <a class="btn btn-gold btn-sm" ${detailAttrs} style="flex:1;">View Details</a>
       </div>
     </div>
   `;
@@ -1481,8 +1536,14 @@ async function renderAI() {
 
       container.innerHTML = recommendationResponse.data.length
         ? recommendationResponse.data
-            .map(
-              (scholarship, index) => `
+            .map((scholarship, index) => {
+              const detailAttrs = getViewDetailsAttributes(scholarship, "recommendations_page");
+              const opportunityId = getOpportunityId(scholarship);
+              const tracking = opportunityId
+                ? ` onclick="trackRecommendationIntent('${escapeHtml(opportunityId)}', 'recommendations_page')"`
+                : "";
+
+              return `
                 <div class="ai-result-card">
                   <div style="text-align:center; flex-shrink:0;">
                     <div style="font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:900; color:${scholarship.matchScore >= 85 ? "var(--teal)" : scholarship.matchScore >= 75 ? "var(--gold)" : "#999"};">${scholarship.matchScore}%</div>
@@ -1502,11 +1563,11 @@ async function renderAI() {
                     ${renderEnsembleBreakdown(scholarship)}
                   </div>
                   <div>
-                    <a class="btn btn-gold btn-sm" href="detail.html?id=${encodeURIComponent(scholarship.id)}" onclick="trackRecommendationIntent('${escapeHtml(scholarship.id)}', 'recommendations_page')">View Details</a>
+                    <a class="btn btn-gold btn-sm" ${detailAttrs}${tracking}>View Details</a>
                   </div>
                 </div>
-              `
-            )
+              `;
+            })
             .join("")
         : '<div class="card">No recommendations yet. Complete your profile to improve matching.</div>';
       return;
@@ -1517,8 +1578,14 @@ async function renderAI() {
 
   const sorted = [...scholarships].sort((a, b) => b.match - a.match);
   container.innerHTML = sorted
-    .map(
-      (scholarship, index) => `
+    .map((scholarship, index) => {
+      const detailAttrs = getViewDetailsAttributes(scholarship, "recommendations_fallback");
+      const opportunityId = getOpportunityId(scholarship);
+      const tracking = opportunityId
+        ? ` onclick="trackRecommendationIntent('${escapeHtml(opportunityId)}', 'recommendations_fallback')"`
+        : "";
+
+      return `
         <div class="ai-result-card">
           <div style="text-align:center; flex-shrink:0;">
             <div style="font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:900; color:${scholarship.match >= 85 ? "var(--teal)" : scholarship.match >= 75 ? "var(--gold)" : "#999"};">${scholarship.match}%</div>
@@ -1538,16 +1605,17 @@ async function renderAI() {
             ${renderEnsembleBreakdown(scholarship)}
           </div>
           <div>
-            <a class="btn btn-gold btn-sm" href="detail.html?id=${scholarship.id}" onclick="trackRecommendationIntent('${scholarship.id}', 'recommendations_fallback')">View Details</a>
+            <a class="btn btn-gold btn-sm" ${detailAttrs}${tracking}>View Details</a>
           </div>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 }
 
 function createScholarshipCard(s) {
   const badgeClass = s.badge === "Deadline Soon" ? "tag tag-red" : "tag tag-green";
+  const detailAttrs = getViewDetailsAttributes(s, "landing_scholarships");
   return `
     <article class="scholarship-card portal-card">
       <div class="card-topline">
@@ -1561,13 +1629,14 @@ function createScholarshipCard(s) {
         <span><i class="fa-solid fa-wallet"></i> ${s.funding}</span>
       </div>
       <div class="sc-actions">
-        <a class="btn btn-gradient btn-sm" href="detail.html">View Details</a>
+        <a class="btn btn-gradient btn-sm" ${detailAttrs}>View Details</a>
       </div>
     </article>
   `;
 }
 
 function createOpportunityCard(o) {
+  const detailAttrs = getViewDetailsAttributes(o, "landing_opportunities");
   return `
     <article class="scholarship-card portal-card">
       <div class="card-topline">
@@ -1581,7 +1650,7 @@ function createOpportunityCard(o) {
         <span><i class="fa-solid fa-gift"></i> ${o.benefit}</span>
       </div>
       <div class="sc-actions">
-        <a class="btn btn-gradient btn-sm" href="detail.html">View Details</a>
+        <a class="btn btn-gradient btn-sm" ${detailAttrs}>View Details</a>
       </div>
     </article>
   `;
@@ -1710,7 +1779,7 @@ function normalizeDashboardScholarship(item) {
 function createDashboardScholarshipCard(item, badgeLabel) {
   const scholarship = normalizeDashboardScholarship(item);
   const badgeClass = badgeLabel === "Deadline Soon" ? "tag tag-red" : "tag tag-green";
-  const detailHref = `detail.html?id=${encodeURIComponent(scholarship.id)}`;
+  const detailAttrs = getViewDetailsAttributes(scholarship, `dashboard_${badgeLabel.toLowerCase().replaceAll(" ", "_")}`);
 
   return `
     <article class="scholarship-card portal-card" style="height:100%;">
@@ -1726,7 +1795,7 @@ function createDashboardScholarshipCard(item, badgeLabel) {
       </div>
       <div style="font-size:0.82rem; color:#7a7060; margin-top:0.25rem;">${escapeHtml(scholarship.provider)}</div>
       <div class="sc-actions">
-        <a class="btn btn-gradient btn-sm" href="${detailHref}" onclick="trackDetailIntent('${escapeHtml(scholarship.id)}', 'dashboard_${badgeLabel.toLowerCase().replaceAll(" ", "_")}')">View Details</a>
+        <a class="btn btn-gradient btn-sm" ${detailAttrs}>View Details</a>
       </div>
     </article>
   `;
@@ -1734,7 +1803,7 @@ function createDashboardScholarshipCard(item, badgeLabel) {
 
 function createDashboardOpportunityCard(item, rowId) {
   const opportunity = normalizeDashboardScholarship(item);
-  const detailHref = `detail.html?id=${encodeURIComponent(opportunity.id)}`;
+  const detailAttrs = getViewDetailsAttributes(opportunity, rowId);
   const benefit = opportunity.funding || opportunity.category || "Opportunity";
   const organizer = opportunity.provider || opportunity.region || "ScholarLens Partner";
 
@@ -1751,7 +1820,7 @@ function createDashboardOpportunityCard(item, rowId) {
         <span><i class="fa-solid fa-gift"></i> ${escapeHtml(benefit)}</span>
       </div>
       <div class="sc-actions">
-        <a class="btn btn-gradient btn-sm" href="${detailHref}" onclick="trackDetailIntent('${escapeHtml(opportunity.id)}', '${escapeHtml(rowId)}')">View Details</a>
+        <a class="btn btn-gradient btn-sm" ${detailAttrs}>View Details</a>
       </div>
     </article>
   `;

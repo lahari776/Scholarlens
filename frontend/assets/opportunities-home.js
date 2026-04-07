@@ -140,6 +140,9 @@ const homeOpportunities = {
 };
 
 function createOpportunityCard(opportunity) {
+  const googleSearchHref = `https://www.google.com/search?q=${encodeURIComponent(
+    [opportunity.title, opportunity.organizer, "hackathon opportunity details"].filter(Boolean).join(" ")
+  )}`;
   return `
     <article class="scholarship-card portal-card">
       <div class="card-topline">
@@ -153,7 +156,7 @@ function createOpportunityCard(opportunity) {
         <span><i class="fa-solid fa-gift"></i> ${opportunity.benefit}</span>
       </div>
       <div class="sc-actions">
-        <a class="btn btn-gradient btn-sm" href="detail.html">View Details</a>
+        <a class="btn btn-gradient btn-sm" href="${googleSearchHref}" target="_blank" rel="noopener noreferrer">View Details</a>
       </div>
     </article>
   `;
