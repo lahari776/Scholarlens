@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results & Analysis - ScholarLens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/theme.css">
+  <style>
+    .results-hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      align-items: stretch;
+    }
+
+    .results-accent {
+      background: var(--brand-gradient);
+      color: #fff;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .results-accent::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -60px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .results-accent .label,
+    .results-accent .text-muted,
+    .results-accent p,
+    .results-accent h2,
+    .results-accent h3 {
+      color: #fff !important;
+    }
+
+    .results-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .results-kpi {
+      padding: 1.2rem 1.25rem;
+      border: 1px solid rgba(16, 34, 54, 0.08);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--brand-shadow);
+    }
+
+    .results-kpi strong {
+      display: block;
+      font-family: "Playfair Display", serif;
+      font-size: 2rem;
+      color: var(--brand-text);
+      margin-bottom: 0.15rem;
+    }
+
+    .results-kpi span {
+      display: block;
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-muted);
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .results-metric-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .results-metric-table th,
+    .results-metric-table td {
+      padding: 0.8rem 0.9rem;
+      border-bottom: 1px solid rgba(16, 34, 54, 0.08);
+      text-align: left;
+    }
+
+    .results-metric-table th {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-muted);
+    }
+
+    .metric-chip-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .metric-chip {
+      padding: 1rem;
+      border-radius: 18px;
+      border: 1px solid rgba(16, 34, 54, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 245, 239, 0.88));
+    }
+
+    .metric-chip span {
+      display: block;
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .metric-chip strong {
+      font-size: 1.45rem;
+      color: var(--brand-text);
+    }
+
+    .bar-stack {
+      display: grid;
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .bar-row {
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.9rem;
+      color: var(--brand-text);
+    }
+
+    .bar-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(16, 34, 54, 0.1);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--action-gradient);
+    }
+
+    .results-notes {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .chart-card {
+      padding: 1.25rem;
+      border-radius: 22px;
+      border: 1px solid rgba(16, 34, 54, 0.08);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--brand-shadow);
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .mini-chart-title {
+      margin-bottom: 1rem;
+    }
+
+    .vertical-chart {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      align-items: end;
+      gap: 0.8rem;
+      height: 220px;
+      padding: 0.5rem 0 0.25rem;
+    }
+
+    .vertical-bar-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 0.55rem;
+    }
+
+    .vertical-bar-track {
+      width: 100%;
+      max-width: 62px;
+      height: 170px;
+      border-radius: 18px 18px 12px 12px;
+      background: rgba(16, 34, 54, 0.08);
+      display: flex;
+      align-items: end;
+      overflow: hidden;
+    }
+
+    .vertical-bar-fill {
+      width: 100%;
+      border-radius: 18px 18px 12px 12px;
+      background: var(--action-gradient);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .vertical-bar-value {
+      font-family: "Playfair Display", serif;
+      font-weight: 700;
+      color: var(--brand-text);
+    }
+
+    .vertical-bar-label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-muted);
+      text-align: center;
+    }
+
+    .donut-chart {
+      --size: 210px;
+      width: var(--size);
+      height: var(--size);
+      margin: 0.5rem auto 1rem;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center, #fff 0 42%, transparent 43%),
+        conic-gradient(
+          #2d6cdf 0 48%,
+          #1f8a70 48% 68.78%,
+          #d77f42 68.78% 74.51%,
+          rgba(16, 34, 54, 0.12) 74.51% 100%
+        );
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .donut-center {
+      text-align: center;
+      z-index: 1;
+    }
+
+    .donut-center strong {
+      display: block;
+      font-family: "Playfair Display", serif;
+      font-size: 2rem;
+      color: var(--brand-text);
+    }
+
+    .donut-center span {
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-muted);
+    }
+
+    .legend-list {
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      font-size: 0.92rem;
+      color: var(--brand-text);
+    }
+
+    .legend-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .confusion-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .confusion-cell {
+      padding: 1rem;
+      border-radius: 18px;
+      text-align: center;
+      border: 1px solid rgba(16, 34, 54, 0.08);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 245, 239, 0.88));
+    }
+
+    .confusion-cell span {
+      display: block;
+      font-family: "DM Mono", monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--brand-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .confusion-cell strong {
+      font-size: 1.7rem;
+      color: var(--brand-text);
+    }
+
+    .results-note {
+      padding: 0.95rem 1rem;
+      border-left: 4px solid var(--brand-teal);
+      background: rgba(31, 138, 112, 0.08);
+      border-radius: 14px;
+    }
+
+    @media (max-width: 960px) {
+      .results-hero,
+      .results-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .results-kpi-grid,
+      .metric-chip-grid,
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .donut-chart {
+        --size: 180px;
+      }
+    }
+  </style>
+</head>
+<body data-page="results" data-auth="student">
+  <div id="site-nav"></div>
+  <div class="app-layout">
+    <aside data-sidebar="student" data-active="recommendations"></aside>
+    <main class="main-content">
+      <div class="results-hero">
+        <section class="card results-accent">
+          <p class="label">Model Performance</p>
+          <h2 style="margin-bottom:0.6rem;">Results & Analysis</h2>
+          <p style="max-width:42rem;">
+            ScholarLens combines content similarity, structured scoring, meta-model prediction, and classifier ensembles to rank scholarships and student opportunities more effectively.
+          </p>
+          <div class="results-notes">
+            <div class="results-note">106 student profiles, 12 opportunities, 136 applications, and 819 user interactions were used in evaluation.</div>
+            <div class="results-note">The ensemble supports transparent recommendations by exposing content, compatibility, classifier, and popularity signals.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <p class="label">Best Highlights</p>
+          <h3 style="margin-bottom:1rem;">Evaluation Snapshot</h3>
+          <div class="metric-chip-grid" style="margin-top:0;">
+            <div class="metric-chip">
+              <span>Accuracy</span>
+              <strong>74.51%</strong>
+            </div>
+            <div class="metric-chip">
+              <span>F1-Score</span>
+              <strong>76.19%</strong>
+            </div>
+            <div class="metric-chip">
+              <span>Recall</span>
+              <strong>89.66%</strong>
+            </div>
+            <div class="metric-chip">
+              <span>Top-3 Hit Rate</span>
+              <strong>66.67%</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="results-kpi-grid">
+        <div class="results-kpi">
+          <span>Users</span>
+          <strong>106</strong>
+        </div>
+        <div class="results-kpi">
+          <span>Scholarships / Opportunities</span>
+          <strong>12</strong>
+        </div>
+        <div class="results-kpi">
+          <span>Applications</span>
+          <strong>136</strong>
+        </div>
+        <div class="results-kpi">
+          <span>Interactions</span>
+          <strong>819</strong>
+        </div>
+      </section>
+
+      <div class="results-grid">
+        <section class="card">
+          <p class="label">Classification Metrics</p>
+          <h3>Model Performance Table</h3>
+          <table class="results-metric-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Accuracy</td>
+                <td>74.51%</td>
+              </tr>
+              <tr>
+                <td>Precision</td>
+                <td>66.24%</td>
+              </tr>
+              <tr>
+                <td>Recall</td>
+                <td>89.66%</td>
+              </tr>
+              <tr>
+                <td>F1-Score</td>
+                <td>76.19%</td>
+              </tr>
+              <tr>
+                <td>Test Size</td>
+                <td>255</td>
+              </tr>
+              <tr>
+                <td>Top-3 Hit Rate</td>
+                <td>66.67%</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <p class="label">Visual Analysis</p>
+          <h3>Performance Overview</h3>
+          <div class="bar-stack">
+            <div class="bar-row">
+              <div class="bar-label"><span>Accuracy</span><strong>74.51%</strong></div>
+              <div class="bar-track"><div class="bar-fill" style="width:74.51%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label"><span>Precision</span><strong>66.24%</strong></div>
+              <div class="bar-track"><div class="bar-fill" style="width:66.24%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label"><span>Recall</span><strong>89.66%</strong></div>
+              <div class="bar-track"><div class="bar-fill" style="width:89.66%;"></div></div>
+            </div>
+            <div class="bar-row">
+              <div class="bar-label"><span>F1-Score</span><strong>76.19%</strong></div>
+              <div class="bar-track"><div class="bar-fill" style="width:76.19%;"></div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="results-grid">
+        <section class="card">
+          <p class="label">Regression Metrics</p>
+          <h3>Structured and Meta Models</h3>
+          <div class="metric-chip-grid">
+            <div class="metric-chip">
+              <span>Structured MAE</span>
+              <strong>0.2044</strong>
+            </div>
+            <div class="metric-chip">
+              <span>Structured RMSE</span>
+              <strong>0.2614</strong>
+            </div>
+            <div class="metric-chip">
+              <span>Meta MAE</span>
+              <strong>0.2031</strong>
+            </div>
+            <div class="metric-chip">
+              <span>Meta RMSE</span>
+              <strong>0.2619</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <p class="label">Interpretation</p>
+          <h3>Key Findings</h3>
+          <div class="results-notes">
+            <div class="results-note">High recall indicates the model is effective at surfacing relevant opportunities for students.</div>
+            <div class="results-note">The F1-score shows balanced performance between identifying relevant matches and limiting weak recommendations.</div>
+            <div class="results-note">The ensemble breakdown improves explainability by showing why a recommendation is ranked highly.</div>
+          </div>
+        </section>
+      </div>
+
+      <section class="chart-grid">
+        <div class="chart-card">
+          <p class="label">Bar Graph</p>
+          <h3 class="mini-chart-title">Core Metrics</h3>
+          <div class="vertical-chart">
+            <div class="vertical-bar-wrap">
+              <div class="vertical-bar-value">74.5%</div>
+              <div class="vertical-bar-track"><div class="vertical-bar-fill" style="height:74.51%;"></div></div>
+              <div class="vertical-bar-label">Accuracy</div>
+            </div>
+            <div class="vertical-bar-wrap">
+              <div class="vertical-bar-value">66.2%</div>
+              <div class="vertical-bar-track"><div class="vertical-bar-fill" style="height:66.24%;"></div></div>
+              <div class="vertical-bar-label">Precision</div>
+            </div>
+            <div class="vertical-bar-wrap">
+              <div class="vertical-bar-value">89.7%</div>
+              <div class="vertical-bar-track"><div class="vertical-bar-fill" style="height:89.66%;"></div></div>
+              <div class="vertical-bar-label">Recall</div>
+            </div>
+            <div class="vertical-bar-wrap">
+              <div class="vertical-bar-value">76.2%</div>
+              <div class="vertical-bar-track"><div class="vertical-bar-fill" style="height:76.19%;"></div></div>
+              <div class="vertical-bar-label">F1</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <p class="label">Distribution</p>
+          <h3 class="mini-chart-title">Evaluation Split</h3>
+          <div class="donut-chart">
+            <div class="donut-center">
+              <strong>74.5%</strong>
+              <span>overall accuracy</span>
+            </div>
+          </div>
+          <div class="legend-list">
+            <div class="legend-item">
+              <span class="legend-label"><span class="legend-dot" style="background:#2d6cdf;"></span>True Positives</span>
+              <strong>104</strong>
+            </div>
+            <div class="legend-item">
+              <span class="legend-label"><span class="legend-dot" style="background:#1f8a70;"></span>True Negatives</span>
+              <strong>86</strong>
+            </div>
+            <div class="legend-item">
+              <span class="legend-label"><span class="legend-dot" style="background:#d77f42;"></span>False Positives</span>
+              <strong>53</strong>
+            </div>
+            <div class="legend-item">
+              <span class="legend-label"><span class="legend-dot" style="background:rgba(16,34,54,0.18);"></span>False Negatives</span>
+              <strong>12</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <p class="label">Confusion Matrix</p>
+          <h3 class="mini-chart-title">Prediction Outcomes</h3>
+          <div class="confusion-grid">
+            <div class="confusion-cell">
+              <span>True Negative</span>
+              <strong>86</strong>
+            </div>
+            <div class="confusion-cell">
+              <span>False Positive</span>
+              <strong>53</strong>
+            </div>
+            <div class="confusion-cell">
+              <span>False Negative</span>
+              <strong>12</strong>
+            </div>
+            <div class="confusion-cell">
+              <span>True Positive</span>
+              <strong>104</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
